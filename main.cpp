@@ -1,4 +1,6 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
 #include <SDL_ttf.h>
 #include <iostream>
 #include <memory>//For smart pointers.
@@ -11,7 +13,7 @@
 #include <random>//For generating random numbers 
 #include <ctime>//For handling time-related functions.
 #include <regex>//For regular expressions.
-
+#include <cmath>
 
 //Boost.Beast sends the JSON data via an HTTPS request to Sendinblue's API.and then Sendinblue processes the request and delivers the message.
 #include <boost/beast/core.hpp>
@@ -29,21 +31,27 @@
 
 using namespace std;
 
-// Forward declaration of classes
+// Forward declaration of all of the base classes
 class State;
 class User;
 class Verification;
-
+class NavigationMenu;
 // Enumeration of states
 enum AppState {
     SPLASH_SCREEN,
     LOGIN_SCREEN,
     SIGNUP_SCREEN,
-    NEXT_SCREEN,
+    MAIN_DASHBOARD,
     S_VERIFICATION_SCREEN,
     PASSWORD_RESET_SCREEN,
     HELP_SCREEN,
-    F_VERIFICATION_SCREEN
+    F_VERIFICATION_SCREEN,
+    PROFILE_SCREEN,
+    SETTINGS_SCREEN,
+    COGNITIVE_STATS_SCREEN,
+    DATA_STATS_SCREEN,
+    TARGETS_SCREEN,
+    SYSTEM_HEALTH_SCREEN
 };
 
 
@@ -52,11 +60,19 @@ const char* screenNames[] = {
     "Splash Screen",
     "Login Screen",
     "Signup Screen",
-    "Next Screen",
+    "Main Dashboard Screen",
     "S Verification Screen",
     "Password Reset  Screen",
     "Help Screen",
-    "F Verification Screen"
+    "F Verification Screen",
+"Profile Screen",
+"Settings Screen",
+"Cognitive Stats Scren",
+"Data Stats Screen",
+"Targets Screen",
+"System Health Screen"
+
+
 };
 
 // Globals
@@ -73,6 +89,51 @@ Uint32 startTime = 0;
 
 void changeState(AppState newState);
 //keep in mind GVCode (Generated Verification Code) and verificationCode (User-entered Code)
+
+SDL_Texture* loadTexture(const std::string &path, SDL_Renderer *renderer) {
+    SDL_Texture* newTexture = nullptr;
+    SDL_Surface* loadedSurface = IMG_Load(path.c_str());
+    if (loadedSurface == nullptr) {
+        std::cerr << "Unable to load image " << path << "! SDL_image Error: " << IMG_GetError() << std::endl;
+    } else {
+        newTexture = SDL_CreateTextureFromSurface(renderer, loadedSurface);
+        if (newTexture == nullptr) {
+            std::cerr << "Unable to create texture from " << path << "! SDL Error: " << SDL_GetError() << std::endl;
+        }
+        SDL_FreeSurface(loadedSurface);
+    }
+    return newTexture;
+}
+int radius = 15;
+void renderRoundedRect(SDL_Renderer* renderer, int x, int y, int w, int h, int radius, SDL_Color color) {
+    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+    
+    // Draw the four corners as circles
+    for (int i = 0; i <= radius; i++) {
+        for (int j = 0; j <= radius; j++) {
+            if (i * i + j * j <= radius * radius) {
+                SDL_RenderDrawPoint(renderer, x + radius - i, y + radius - j);
+                SDL_RenderDrawPoint(renderer, x + w - radius + i, y + radius - j);
+                SDL_RenderDrawPoint(renderer, x + radius - i, y + h - radius + j);
+                SDL_RenderDrawPoint(renderer, x + w - radius + i, y + h - radius + j);
+            }
+        }
+    }
+
+    // Draw the sides as rectangles
+    SDL_Rect top = { x + radius, y, w - 2 * radius, radius };
+    SDL_Rect bottom = { x + radius, y + h - radius, w - 2 * radius, radius };
+    SDL_Rect left = { x, y + radius, radius, h - 2 * radius };
+    SDL_Rect right = { x + w - radius, y + radius, radius, h - 2 * radius };
+    SDL_Rect center = { x + radius, y + radius, w - 2 * radius, h - 2 * radius };
+
+    SDL_RenderFillRect(renderer, &top);
+    SDL_RenderFillRect(renderer, &bottom);
+    SDL_RenderFillRect(renderer, &left);
+    SDL_RenderFillRect(renderer, &right);
+    SDL_RenderFillRect(renderer, &center);
+}
+
 
 class User {
 private:
@@ -146,7 +207,7 @@ bool initializeDatabase(const std::string& dbName) {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT,
             phone_number TEXT,
-            code TEXT NOT NULL,
+            GVCode TEXT NOT NULL,
             expiration_time INTEGER NOT NULL,
             CHECK (email IS NOT NULL OR phone_number IS NOT NULL),
             CHECK (email IS NULL OR phone_number IS NULL)
@@ -401,90 +462,126 @@ void storeEmailCodeInDatabase(const std::string& emailAddress, const std::string
 
 
 std::string sendVerificationCodeToEmail(const std::string& emailAddress) {
-    std::string apiKey = getApiKey(); // Fetch the API key for Sendinblue
-    std::string GVCode = generateVerificationCode(); // Generate a verification code
-    // GVCode=  Generated Verification Code[it's the one that  i generated and i'm sending to the user for verifcation and not the variable that is storign user input verification code ]
-    
-    // Store the verification code in the database
-    storeEmailCodeInDatabase(emailAddress,  GVCode); // Store the email and code in your database
-    
-    // Create the email content with the verification code
-    std::string emailContent = "Your verification code is: " +  GVCode;
+    std::string apiKey;
+    std::string GVCode;
 
     try {
-        // Set up Boost.Asio I/O context and SSL context
+        apiKey = getApiKey(); // Fetch the API key for Sendinblue
+      
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to get API key: " << e.what() << std::endl;
+        return "";
+    }
+ if (apiKey.empty()) {
+        std::cerr << "API key is empty." << std::endl;
+        return "";
+    }
+
+
+
+    try {
+        GVCode = generateVerificationCode(); // Generate a verification code
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to generate verification code: " << e.what() << std::endl;
+        return "";
+    }
+
+    try {
+        storeEmailCodeInDatabase(emailAddress, GVCode); // Store the email and code in your database
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to store email code in database: " << e.what() << std::endl;
+        return "";
+    }
+
+    std::string emailContent = "Your verification code is: " + GVCode;
+ std::cout << "your email content is  " << emailContent<< std::endl;
+    try {
         boost::asio::io_context io_context;
         boost::asio::ssl::context ssl_context(boost::asio::ssl::context::tlsv12_client);
 
-        // Resolve the Sendinblue API endpoint
         boost::asio::ip::tcp::resolver resolver(io_context);
-        boost::asio::ip::tcp::resolver::results_type endpoints = resolver.resolve("api.sendinblue.com", "443");
-        
-        // Create a TCP socket and SSL stream
+        auto endpoints = resolver.resolve("api.sendinblue.com", "443");
+
         boost::asio::ip::tcp::socket socket(io_context);
         boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket(std::move(socket), ssl_context);
 
-        // Connect to the endpoint and perform SSL handshake
-        boost::asio::connect(ssl_socket.lowest_layer(), endpoints);
-        ssl_socket.handshake(boost::asio::ssl::stream_base::client);
+        try {
+            boost::asio::connect(ssl_socket.lowest_layer(), endpoints);
+        } catch (const std::exception& e) {
+            std::cerr << "Failed to connect: " << e.what() << std::endl;
+            return "";
+        }
+ 
+        try {
+            ssl_socket.handshake(boost::asio::ssl::stream_base::client);
+        } catch (const std::exception& e) {
+            std::cerr << "Failed to perform SSL handshake: " << e.what() << std::endl;
+            return "";
+        }
 
-        // Prepare the HTTPS POST request
         boost::beast::http::request<boost::beast::http::string_body> req{
             boost::beast::http::verb::post, "/v3/smtp/email", 11
         };
         req.set(boost::beast::http::field::host, "api.sendinblue.com");
         req.set(boost::beast::http::field::authorization, "api-key " + apiKey);
         req.set(boost::beast::http::field::content_type, "application/json");
+req.set(boost::beast::http::field::connection, "keep-alive");
+req.set(boost::beast::http::field::accept_encoding, "gzip, deflate, br");
+req.set(boost::beast::http::field::accept, "*/*");
+req.set(boost::beast::http::field::user_agent, "Neurabyte/1.0");
 
-        // Create JSON payload using RapidJSON
+ 
+
+
         rapidjson::Document document;
         document.SetObject();
         rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
 
-        // Create the sender object
         rapidjson::Value sender(rapidjson::kObjectType);
         sender.AddMember("email", "siddiqaa954@gmail.com", allocator);
         sender.AddMember("name", "Neurabyte", allocator);
 
-        // Create the recipient object
         rapidjson::Value recipient(rapidjson::kObjectType);
         recipient.AddMember("email", rapidjson::Value().SetString(emailAddress.c_str(), allocator), allocator);
 
-        // Create the 'to' array with the recipient object
         rapidjson::Value to(rapidjson::kArrayType);
         to.PushBack(recipient, allocator);
 
-        // Create the content array with the email content object
         rapidjson::Value content(rapidjson::kArrayType);
         rapidjson::Value contentObj(rapidjson::kObjectType);
         contentObj.AddMember("type", "text/plain", allocator);
         contentObj.AddMember("value", rapidjson::Value().SetString(emailContent.c_str(), allocator), allocator);
         content.PushBack(contentObj, allocator);
 
-        // Add all the components to the JSON document
         document.AddMember("sender", sender, allocator);
         document.AddMember("to", to, allocator);
         document.AddMember("subject", "Verification Code", allocator);
         document.AddMember("htmlContent", rapidjson::Value().SetString(emailContent.c_str(), allocator), allocator);
 
-        // Serialize the JSON document to a string
         rapidjson::StringBuffer buffer;
         rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
         document.Accept(writer);
 
-        // Set the request body and prepare the payload
         req.body() = buffer.GetString();
         req.prepare_payload();
+ 
+        try {
+            boost::beast::http::write(ssl_socket, req);
+        } catch (const std::exception& e) {
+            std::cerr << "Failed to send HTTP request: " << e.what() << std::endl;
+            return "";
+        }
 
-        // Send the HTTPS POST request
-        boost::beast::http::write(ssl_socket, req);
-
-        // Read the response from the server
         boost::beast::flat_buffer responseBuffer;
         boost::beast::http::response<boost::beast::http::string_body> res;
-        boost::beast::http::read(ssl_socket, responseBuffer, res);
 
-        // Check the response status
+        try {
+            boost::beast::http::read(ssl_socket, responseBuffer, res);
+        } catch (const std::exception& e) {
+            std::cerr << "Failed to read HTTP response: " << e.what() << std::endl;
+            return "";
+        }
+              std::cout << "API Key: " << apiKey << std::endl;
         if (res.result() == boost::beast::http::status::unauthorized) {
             std::cerr << "Error: Unauthorized access. Please check your API key." << std::endl;
         } else if (res.result() == boost::beast::http::status::forbidden) {
@@ -492,48 +589,40 @@ std::string sendVerificationCodeToEmail(const std::string& emailAddress) {
         } else if (res.result() != boost::beast::http::status::ok) {
             std::cerr << "Error: " << res.result() << " " << res.reason() << std::endl;
         } else {
-            // Output the response body to the console
             std::cout << "Response: " << res.body() << std::endl;
         }
+// Close the SSL socket and underlying TCP socket
 
-        // Close the socket
-        ssl_socket.shutdown();
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-    }
-     return GVCode;
+      try {
+    // Perform SSL shutdown
+    ssl_socket.shutdown(); // No arguments are needed here
+} catch (const std::exception& e) {
+    std::cerr << "Failed to shut down SSL socket: " << e.what() << std::endl;
+}
+
+try {
+    // Shutdown the underlying TCP socket
+    ssl_socket.lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+} catch (const std::exception& e) {
+    std::cerr << "Failed to shut down TCP socket: " << e.what() << std::endl;
+}
+
+try {
+    // Close the underlying TCP socket
+    ssl_socket.lowest_layer().close();
+} catch (const std::exception& e) {
+    std::cerr << "Failed to close TCP socket: " << e.what() << std::endl;
 }
 
 
 
 
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return GVCode;
+}
 
 
 
@@ -576,159 +665,254 @@ void storePhoneCodeInDatabase(const std::string& phoneNumber, const std::string&
     sqlite3_close(db);
 }
 
+std::string sendVerificationCodeToPhone(const std::string& phoneNumber) {
+    std::string apiKey, GVCode;
 
- 
+    try {
+        apiKey = getApiKey();
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to get API key: " << e.what() << std::endl;
+        return "";
+    }
 
+    try {
+        GVCode = generateVerificationCode();
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to generate verification code: " << e.what() << std::endl;
+        return "";
+    }
 
-// Function to send an SMS using Sendinblue with Boost.Beast, Boost.Asio SSL, and RapidJSON
-std::string sendVerificationCodeToPhone( const std::string& phoneNumber) {
-
-    std::string apiKey = getApiKey();
-    std::string GVCode = generateVerificationCode();
-    
-    // Store verification code in the database
-    storePhoneCodeInDatabase(phoneNumber, GVCode);
+    try {
+        storePhoneCodeInDatabase(phoneNumber, GVCode);
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to store phone code in database: " << e.what() << std::endl;
+        return "";
+    }
 
     std::string smsContent = "Your verification code is: " + GVCode;
 
     try {
-        // Create an I/O context and SSL context
         boost::asio::io_context io_context;
         boost::asio::ssl::context ssl_context(boost::asio::ssl::context::tlsv12_client);
 
-        // Create and open a TCP socket
-        boost::asio::ip::tcp::resolver resolver(io_context);
-        boost::asio::ip::tcp::resolver::results_type endpoints = resolver.resolve("api.sendinblue.com", "443");
-        boost::asio::ip::tcp::socket socket(io_context);
-        boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket(std::move(socket), ssl_context);
+        try {
+            boost::asio::ip::tcp::resolver resolver(io_context);
+            auto endpoints = resolver.resolve("api.sendinblue.com", "443");
+            boost::asio::ip::tcp::socket socket(io_context);
+            boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket(std::move(socket), ssl_context);
 
-        // Perform the SSL handshake
-        boost::asio::connect(ssl_socket.lowest_layer(), endpoints);
-        ssl_socket.handshake(boost::asio::ssl::stream_base::client);
+            try {
+                boost::asio::connect(ssl_socket.lowest_layer(), endpoints);
+            } catch (const std::exception& e) {
+                std::cerr << "Failed to connect: " << e.what() << std::endl;
+                return "";
+            }
 
-        // Prepare the HTTPS POST request
-        boost::beast::http::request<boost::beast::http::string_body> req{boost::beast::http::verb::post, "/v3/transactionalSMS/sms", 11};
-        req.set(boost::beast::http::field::host, "api.sendinblue.com");
-        req.set(boost::beast::http::field::authorization, "Bearer " + apiKey);
-        req.set(boost::beast::http::field::content_type, "application/json");
+            try {
+                ssl_socket.handshake(boost::asio::ssl::stream_base::client);
+            } catch (const std::exception& e) {
+                std::cerr << "Failed to perform SSL handshake: " << e.what() << std::endl;
+                return "";
+            }
 
-        // Create JSON payload using RapidJSON
-        rapidjson::Document document;
-        document.SetObject();
-        rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
+            boost::beast::http::request<boost::beast::http::string_body> req{boost::beast::http::verb::post, "/v3/transactionalSMS/sms", 11};
+            req.set(boost::beast::http::field::host, "api.sendinblue.com");
+            req.set(boost::beast::http::field::authorization, "Bearer " + apiKey);
+            req.set(boost::beast::http::field::content_type, "application/json");
+req.set(boost::beast::http::field::connection, "keep-alive");
+req.set(boost::beast::http::field::accept_encoding, "gzip, deflate, br");
+req.set(boost::beast::http::field::accept, "*/*");
+req.set(boost::beast::http::field::user_agent, "Neurabyte/1.0");
+            rapidjson::Document document;
+            document.SetObject();
+            rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
 
-        document.AddMember("sender", rapidjson::Value().SetString("YourSenderName", allocator), allocator);
-        document.AddMember("recipient", rapidjson::Value().SetString(phoneNumber.c_str(), allocator), allocator);
-        document.AddMember("content", rapidjson::Value().SetString(smsContent.c_str(), allocator), allocator);
+            document.AddMember("sender", rapidjson::Value().SetString("Neurabyte", allocator), allocator);
+            document.AddMember("recipient", rapidjson::Value().SetString(phoneNumber.c_str(), allocator), allocator);
+            document.AddMember("content", rapidjson::Value().SetString(smsContent.c_str(), allocator), allocator);
 
-        rapidjson::StringBuffer buffer;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-        document.Accept(writer);
+            rapidjson::StringBuffer buffer;
+            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+            document.Accept(writer);
 
-        req.body() = buffer.GetString();
-        req.prepare_payload();
+            req.body() = buffer.GetString();
+            req.prepare_payload();
 
-        // Send the request
-        boost::beast::http::write(ssl_socket, req);
+            try {
+                boost::beast::http::write(ssl_socket, req);
+            } catch (const std::exception& e) {
+                std::cerr << "Failed to send HTTP request: " << e.what() << std::endl;
+                return "";
+            }
 
-        // Read the response
-        boost::beast::flat_buffer responseBuffer;
-        boost::beast::http::response<boost::beast::http::string_body> res;
-        boost::beast::http::read(ssl_socket, responseBuffer, res);
+            boost::beast::flat_buffer responseBuffer;
+            boost::beast::http::response<boost::beast::http::string_body> res;
 
-        std::cout << "Response: " << res.body() << std::endl;
+            try {
+                boost::beast::http::read(ssl_socket, responseBuffer, res);
+            } catch (const std::exception& e) {
+                std::cerr << "Failed to read HTTP response: " << e.what() << std::endl;
+                return "";
+            }
 
-        // Close the socket
-        ssl_socket.shutdown();
+            std::cout << "Response: " << res.body() << std::endl;
+try {
+    // Perform SSL shutdown
+    ssl_socket.shutdown(); // No arguments are needed here
+} catch (const std::exception& e) {
+    std::cerr << "Failed to shut down SSL socket: " << e.what() << std::endl;
+}
+
+try {
+    // Shutdown the underlying TCP socket
+    ssl_socket.lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+} catch (const std::exception& e) {
+    std::cerr << "Failed to shut down TCP socket: " << e.what() << std::endl;
+}
+
+try {
+    // Close the underlying TCP socket
+    ssl_socket.lowest_layer().close();
+} catch (const std::exception& e) {
+    std::cerr << "Failed to close TCP socket: " << e.what() << std::endl;
+}
+
+
+
+        } catch (const std::exception& e) {
+            std::cerr << "Failed to set up SSL connection: " << e.what() << std::endl;
+            return "";
+        }
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
+        return "";
     }
 
     return GVCode;
 }
 
-// Function to validate the verification code
-bool validateVerificationCode(const std::string&verificationCode, const std::string& GVCode) {
+ bool validateVerificationCode(const std::string& verificationCode, const std::string& GVCode) {
     sqlite3* db;
     sqlite3_stmt* stmt;
-    std::string sql = "SELECT code FROM verification_codes WHERE (email = ? OR phone_number = ?) AND expiration_time > ?;";
 
-    // Open database
-    if (sqlite3_open("C:/NEW/neurabyte.db", &db) != SQLITE_OK) {
-        std::cerr << "Failed to open database: " << sqlite3_errmsg(db) << std::endl;
-        return false;
+
+    //std::string sql = "SELECT GVCode FROM verification_codes WHERE (email = ? OR phone_number = ?) AND expiration_time > ?;";
+ std::string sql;
+    if (isEmail) {
+        sql = "SELECT expiration_time FROM verification_codes WHERE email = ? AND GVCode = ?";
+    } else {
+        sql = "SELECT expiration_time FROM verification_codes WHERE phone_number = ? AND GVCode = ?";
     }
 
-    // Prepare SQL statement
-    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
-        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
-        sqlite3_close(db);
-        return false;
-    }
 
-    // Set parameters
-    sqlite3_bind_text(stmt, 1,verificationCode.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2,verificationCode.c_str(), -1, SQLITE_STATIC);
 
-    // Get current time
-    std::time_t currentTime = std::time(nullptr);
-    sqlite3_bind_int(stmt, 3, currentTime);
 
-    // Execute statement and check code
-    bool isValid = false;
-    if (sqlite3_step(stmt) == SQLITE_ROW) {
-        std::string storedxxxxx(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
-        if (GVCode == storedxxxxx) {
-            isValid = true;
+    try {
+        if (sqlite3_open("C:/NEW/neurabyte.db", &db) != SQLITE_OK) {
+            std::cerr << "Failed to open database: " << sqlite3_errmsg(db) << std::endl;
+            return false;
         }
+
+        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+            std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+            sqlite3_close(db);
+            return false;
+        }
+
+        if (sqlite3_bind_text(stmt, 1, verificationCode.c_str(), -1, SQLITE_STATIC) != SQLITE_OK) {
+            std::cerr << "Failed to bind parameter 1: " << sqlite3_errmsg(db) << std::endl;
+            sqlite3_finalize(stmt);
+            sqlite3_close(db);
+            return false;
+        }
+
+        if (sqlite3_bind_text(stmt, 2, verificationCode.c_str(), -1, SQLITE_STATIC) != SQLITE_OK) {
+            std::cerr << "Failed to bind parameter 2: " << sqlite3_errmsg(db) << std::endl;
+            sqlite3_finalize(stmt);
+            sqlite3_close(db);
+            return false;
+        }
+
+        std::time_t currentTime = std::time(nullptr);
+        if (sqlite3_bind_int(stmt, 3, static_cast<int>(currentTime)) != SQLITE_OK) {
+            std::cerr << "Failed to bind current time: " << sqlite3_errmsg(db) << std::endl;
+            sqlite3_finalize(stmt);
+            sqlite3_close(db);
+            return false;
+        }
+
+        bool isValid = false;
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            std::string storedCode(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
+            if (GVCode == storedCode) {
+                isValid = true;
+            }
+        }
+
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+
+        return isValid;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        if (stmt) sqlite3_finalize(stmt);
+        if (db) sqlite3_close(db);
+        return false;
     }
-
-    // Clean up
-    sqlite3_finalize(stmt);
-    sqlite3_close(db);
-
-    return isValid;
 }
 
 
 // Function to check if the verification code has expired
+bool checkCodeExpiration(const std::string& verificationCode) {
+    sqlite3* db = nullptr;
+    sqlite3_stmt* stmt = nullptr;
+    std::string sql = "SELECT expiration_time FROM verification_codes WHERE GVCode = ?;";
 
-bool checkCodeExpiration(const std::string&verificationCode) {
-    sqlite3* db;
-    sqlite3_stmt* stmt;
-    std::string sql = "SELECT expiration_time FROM verification_codes WHERE code = ?;";
-
-    // Open database
-    if (sqlite3_open("C:/NEW/neurabyte.db", &db) != SQLITE_OK) {
-        std::cerr << "Failed to open database: " << sqlite3_errmsg(db) << std::endl;
-        return false;
-    }
-
-    // Prepare SQL statement
-    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
-        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
-        sqlite3_close(db);
-        return false;
-    }
-
-    // Set parameter
-    sqlite3_bind_text(stmt, 1,verificationCode.c_str(), -1, SQLITE_STATIC);
-
-    // Execute statement and check expiration
-    bool isExpired = false;
-    if (sqlite3_step(stmt) == SQLITE_ROW) {
-        std::time_t expirationTime = sqlite3_column_int(stmt, 0);
-        if (std::time(nullptr) > expirationTime) {
-            isExpired = true;
+    try {
+        // Open database
+        if (sqlite3_open("C:/NEW/neurabyte.db", &db) != SQLITE_OK) {
+            std::cerr << "Failed to open database: " << sqlite3_errmsg(db) << std::endl;
+            return false;
         }
+
+        // Prepare SQL statement
+        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+            std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+            sqlite3_close(db);
+            return false;
+        }
+
+        // Set parameter
+        if (sqlite3_bind_text(stmt, 1, verificationCode.c_str(), -1, SQLITE_STATIC) != SQLITE_OK) {
+            std::cerr << "Failed to bind parameter: " << sqlite3_errmsg(db) << std::endl;
+            sqlite3_finalize(stmt);
+            sqlite3_close(db);
+            return false;
+        }
+
+        // Execute statement and check expiration
+        bool isExpired = false;
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            std::time_t expirationTime = sqlite3_column_int(stmt, 0);
+            if (std::time(nullptr) > expirationTime) {
+                isExpired = true;
+            }
+        }
+
+        // Clean up
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+
+        return isExpired;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        if (stmt) sqlite3_finalize(stmt);
+        if (db) sqlite3_close(db);
+        return false;
     }
-
-    // Clean up
-    sqlite3_finalize(stmt);
-    sqlite3_close(db);
-
-    return isExpired;
 }
+
+
 
 
 
@@ -857,10 +1041,7 @@ bool isCheckboxChecked = false;
    int boxPadding = 20;
     int checkboxSize=10;
 
-    SDL_Rect usernameBoxRect;
-    SDL_Rect passwordBoxRect;
-    SDL_Rect loginButtonRect;
-    SDL_Rect signUpBoxRect;
+   
     SDL_Rect outerBox ;
 
 
@@ -1154,40 +1335,16 @@ SDL_Rect outerBox = { boxX, boxY, boxWidth, boxHeight };
     SDL_RenderFillRect(renderer, &outerBox);
 
   
-    SDL_Rect usernameBox = { usernameBoxX, usernameBoxY, usernameBoxWidth, inputBoxHeight };
-  
-    // Set the color for the fill (white)
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+renderRoundedRect(renderer,usernameBoxX, usernameBoxY, usernameBoxWidth, inputBoxHeight, radius, white);
 
-    // Render the username input box filled with white color
-    SDL_RenderFillRect(renderer, &usernameBox);
+renderRoundedRect(renderer,  passwordBoxX, passwordBoxY,  passwordBoxWidth, inputBoxHeight, radius, white);
 
+renderRoundedRect(renderer,  loginButtonX, loginButtonY, loginButtonWidth, loginButtonHeight, radius,darkgreen);
 
-
- SDL_Rect passwordBox = { passwordBoxX, passwordBoxY,  passwordBoxWidth, inputBoxHeight };
-
- SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    // Render the password input box filled with white color
-    SDL_RenderFillRect(renderer, &passwordBox);
- 
-    
-    
+renderRoundedRect(renderer,signUpBoxX, signUpBoxY, signUpBoxWidth, signUpBoxHeight, radius,maroon );
 
 
- SDL_Rect loginButton = { loginButtonX, loginButtonY, loginButtonWidth, loginButtonHeight };
-    // Set the color for the fill (darkgreen)
-    SDL_SetRenderDrawColor(renderer, 0, 50, 0, 255); // Darkest green color
-   
-    SDL_RenderFillRect(renderer, &loginButton);
-    // Render text inside button
-   
 
-    SDL_Rect signUpBox = { signUpBoxX, signUpBoxY, signUpBoxWidth, signUpBoxHeight };
-    SDL_SetRenderDrawColor(renderer, 0, 50, 0, 255); // Darkest green color
-    // Render BOX filled with MAROON color
-    SDL_RenderFillRect(renderer, &signUpBox);
-    // Render text inside button
-    
     SDL_Rect checkbox = { checkboxX, checkboxY, checkboxSize, checkboxSize };
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderFillRect(renderer, &checkbox);
@@ -1253,8 +1410,8 @@ if (enteringpassword && !password.empty()) {
         // Check if enough time has passed since showing the message
         Uint32 currentTime = SDL_GetTicks();
         if (currentTime - loginMessageTime >= LOGIN_MESSAGE_DISPLAY_TIME && loginSuccess) {
-            // Time elapsed and login was successful, change state to next screen
-            changeState(NEXT_SCREEN);
+            // Time elapsed and login was successful, change state to Main Dashboard Screen
+            changeState(MAIN_DASHBOARD);
         }
  }
 
@@ -1274,32 +1431,6 @@ if (enteringpassword && !password.empty()) {
     
 
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
 
 
 // SignupScreenState class
@@ -1348,16 +1479,12 @@ int boxX ;
 int boxPadding = 20;
 int boxWidth = Width- 6* boxPadding;
     int boxHeight = Height - 10* boxPadding;
-
-
-
-    SDL_Rect  emailboxRect;
+ SDL_Rect  emailboxRect;
       SDL_Rect usernameboxRect; 
     SDL_Rect  PasswordboxRect;
     SDL_Rect  reconfirmpasswordboxRect;
-     SDL_Rect signupbuttonRect;
-     SDL_Rect loginbuttonRect;
 SDL_Rect outerBox ;
+
 
 
 // Declare variables for text dimensions
@@ -1474,7 +1601,9 @@ case SDLK_RETURN:
             enteringUsername = false;
             enteringpassword = false;
             enteringreconfirmedPassword = true;
-        } else if (mouseX >= textX9 && mouseX <= textX9 + textWidth9 && mouseY >= textY9 && mouseY <= textY9 + textHeight9) {
+        } 
+        
+        else if (mouseX >= textX9 && mouseX <= textX9 + textWidth9 && mouseY >= textY9 && mouseY <= textY9 + textHeight9) {
             std::cout << "Login button clicked" << std::endl;
             changeState(LOGIN_SCREEN);
         } else if (mouseX >= textX7 && mouseX <= textX7 + textWidth7 && mouseY >= textY7 && mouseY <= textY7 + textHeight7) {
@@ -1484,30 +1613,6 @@ case SDLK_RETURN:
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-    
-    
-    
-
-
-
-
-
-
-
-
-
-
 
 
     
@@ -1606,12 +1711,23 @@ boxX = (Width - boxWidth) / 2;
 
 
 SDL_Rect outerBox = { boxX, boxY, boxWidth, boxHeight };
-
-
-
-
 SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderFillRect(renderer, &outerBox);
+
+/*
+
+          renderRoundedRect(renderer, emailboxX, emailboxY, emailboxWidth, emailboxHeight, radius, white);
+
+          
+          renderRoundedRect(renderer, usernameboxX, usernameboxY, usernameboxWidth, usernameboxHeight, radius, white);
+
+          
+          renderRoundedRect(renderer, PasswordboxX, PasswordboxY, PasswordboxWidth, PasswordboxHeight, radius, white);
+
+          
+          renderRoundedRect(renderer,reconfirmpasswordboxX, reconfirmpasswordboxY, reconfirmpasswordboxWidth, reconfirmpasswordboxHeight, radius, white);
+*/
+
 
    // Define positions and dimensions of input boxes
     SDL_Rect emailbox = { emailboxX, emailboxY, emailboxWidth, emailboxHeight };
@@ -1650,22 +1766,13 @@ SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     // Render the username input box filled with white color
     SDL_RenderFillRect(renderer, &reconfirmpasswordbox);
 
-    //text6
-    SDL_Rect signupbutton = { signupbuttonX, signupbuttonY, signupbuttonWidth, signupbuttonHeight };
+
+          renderRoundedRect(renderer, signupbuttonX, signupbuttonY, signupbuttonWidth, signupbuttonHeight, radius,darkgreen);
+
+          
+          renderRoundedRect(renderer, loginbuttonX, loginbuttonY, loginbuttonWidth, loginbuttonHeight, radius, darkgreen);
 
 
- SDL_SetRenderDrawColor(renderer, 0, 50, 0, 255); // Darkest green color
-
-    // Render the username input box filled with white color
-    SDL_RenderFillRect(renderer, &signupbutton);
-
-    //text7
-    SDL_Rect loginbutton = {loginbuttonX, loginbuttonY, loginbuttonWidth, loginbuttonHeight };
-    // Set the color for the fill (darkgreeen)
-   SDL_SetRenderDrawColor(renderer, 0, 50, 0, 255); // Darkest green color
-    // Render the username input box filled with white color
-    SDL_RenderFillRect(renderer, &loginbutton);
-  // Render texts using defined positions
         renderText(text1, textX1, textY1, white, digitalFont, renderer);
         renderText(text2, textX2, textY2, white, digitalFont, renderer);
         renderText(text7, textX7, textY7, white, digitalFont, renderer);
@@ -1771,33 +1878,476 @@ if (enteringemailAddress && !emailAddress.empty()) {
 };
 
 
+class NavigationMenu : public State {
+protected:
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color grey = { 100, 100, 100, 255 };
+    SDL_Color black = { 0, 0, 0, 255 };
+    SDL_Color darkgreen = { 0, 50, 0, 255 };
+    SDL_Color maroon = { 128, 0, 0, 255 };
+
+
+        int HomeiconWidth= 40;
+        int ProfileiconWidth= 40;
+        int SettingsiconWidth= 40;
+        int CognitiveStatsiconWidth= 40;
+        int DataStatsiconWidth= 40;
+        int TargetsiconWidth= 40;
+        int SystemHealthiconWidth= 40;
+
+        
+        int textWidthHome ,textWidthProfile ,textWidthSettings ,textWidthCognitiveStat ,textWidthDataStats ,textWidthTargets,textWidthSystemHealth;
+
+         int textHeightHome ,textHeightProfile ,textHeightSettings ,textHeightCognitiveStat ,textHeightDataStats ,textHeightTargets,textHeightSystemHealth;
+
+
+  int textYHome ,textYProfile ,textYSettings ,textYCognitiveStat ,textYDataStats ,textYTargets,textYSystemHealth;
+int SearchboxHeight=30;
+
+         int HomeiconHeight= 40;
+        int ProfileiconHeight= 40;
+        int SettingsiconHeight= 40;
+        int CognitiveStatsiconHeight= 40;
+        int DataStatsiconHeight= 40;
+        int TargetsiconHeight= 40;
+        int SystemHealthiconHeight= 40;
+
+         int HomeiconX, ProfileiconX, SettingsiconX, CognitiveStatsiconX, DataStatsiconX, TargetsiconX,SystemHealthiconX;
+
+         float HomeiconY, ProfileiconY, SettingsiconY, CognitiveStatsiconY, DataStatsiconY, TargetsiconY, SystemHealthiconY;
+
+
+// Define the proportional gap based on the window height
+float proportionalGap = Height / 10.0;
+
+
+       
+      
+        SDL_Rect  Searchicon;
+        SDL_Rect  Homeicon;
+         SDL_Rect  Profileicon;
+         SDL_Rect  Settingsicon;
+         SDL_Rect  CognitiveStatsicon;
+         SDL_Rect  DataStatsicon;
+         SDL_Rect  Targetsicon;
+         SDL_Rect  SystemHealthicon;
 
 
 
-// NextScreenState class
-class NextScreenState : public State {
+
+
+
+
+
+
 public:
-    NextScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* digitalFont):State(window ,renderer, digitalFont ) {
-        // Initialization if needed
+    NavigationMenu(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* digitalFont)
+        : State(window, renderer, digitalFont) {
+        SDL_StartTextInput();
+        // Initialize other necessary variables if needed
+    }
+
+    virtual void handleEvents(SDL_Event& event) override {
+        if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_FINGERDOWN) {
+        int mouseX, mouseY;
+
+        if (event.type == SDL_MOUSEBUTTONDOWN) {
+            mouseX = event.button.x;
+            mouseY = event.button.y;
+        } else { // SDL_FINGERDOWN
+            mouseX = event.tfinger.x * Width;
+            mouseY = event.tfinger.y * Height;
+        }
+
+        std::cout << "Click at (" << mouseX << ", " << mouseY << ")" << std::endl;
+  if (mouseX >= HomeiconX && mouseX <= HomeiconX + HomeiconWidth && mouseY >=HomeiconY && mouseY <= HomeiconY + HomeiconHeight) {
+            std::cout << "Home Icon  clicked" << std::endl;
+            changeState(MAIN_DASHBOARD);
+
+}
+else if (mouseX >= ProfileiconX && mouseX <= ProfileiconX + ProfileiconWidth && mouseY >= ProfileiconY && mouseY <= ProfileiconY +  ProfileiconHeight) {
+            std::cout << "PROFILE_ Icon  clicked" << std::endl;
+            changeState(PROFILE_SCREEN);
+
+}
+
+else if (mouseX >=SettingsiconX && mouseX <= SettingsiconX + SettingsiconWidth && mouseY >= SettingsiconY && mouseY <= SettingsiconY + SettingsiconHeight) {
+            std::cout << " SETTINGS gear Icon  clicked" << std::endl;
+            changeState( SETTINGS_SCREEN);
+
+}
+
+else if (mouseX >= CognitiveStatsiconX && mouseX <= CognitiveStatsiconX + CognitiveStatsiconWidth && mouseY >= CognitiveStatsiconY && mouseY <= CognitiveStatsiconY + CognitiveStatsiconHeight) {
+    std::cout << "COGNITIVE_STATS Icon clicked" << std::endl;
+    changeState(COGNITIVE_STATS_SCREEN);
+}
+else if (mouseX >= DataStatsiconX && mouseX <= DataStatsiconX + DataStatsiconWidth && mouseY >= DataStatsiconY && mouseY <= DataStatsiconY + DataStatsiconHeight) {
+    std::cout << "DATA_STATS Icon clicked" << std::endl;
+    changeState(DATA_STATS_SCREEN);
+}
+else if (mouseX >= TargetsiconX && mouseX <= TargetsiconX + TargetsiconWidth && mouseY >= TargetsiconY && mouseY <= TargetsiconY + TargetsiconHeight) {
+    std::cout << "TARGETS Icon clicked" << std::endl;
+    changeState(TARGETS_SCREEN);
+}
+else if (mouseX >= SystemHealthiconX && mouseX <= SystemHealthiconX + SystemHealthiconWidth && mouseY >= SystemHealthiconY && mouseY <= SystemHealthiconY + SystemHealthiconHeight) {
+    std::cout << "SYSTEM_HEALTH Icon clicked" << std::endl;
+    changeState(SYSTEM_HEALTH_SCREEN);
+}
+
+}
+    }
+
+   virtual  void update() override {
+        // Update logic for System Health Screen if needed
+    }
+
+  virtual   void render() override {
+       
+         HomeiconY =  (((Height - SearchboxHeight) / 2)-250)+ (Height / 10);
+         ProfileiconY = HomeiconY + proportionalGap;
+         SettingsiconY = ProfileiconY + proportionalGap;
+         CognitiveStatsiconY = SettingsiconY + proportionalGap;
+         DataStatsiconY = CognitiveStatsiconY + proportionalGap;
+         TargetsiconY = DataStatsiconY + proportionalGap;
+         SystemHealthiconY = TargetsiconY + proportionalGap;
+
+const char *textHome = "Home";
+const char *textProfile = "Profile";
+const char *textSettings = "Settings";
+const char *textCognitiveStats = "Cognitive";
+const char *textDataStats = "Data";
+const char *textTargets = "Targets";
+const char *textSystemHealth = "System";
+
+TTF_SizeText(digitalFont, textHome, &textWidthHome, &textHeightHome);
+TTF_SizeText(digitalFont, textProfile, &textWidthProfile, &textHeightProfile);
+TTF_SizeText(digitalFont, textSettings, &textWidthSettings, &textHeightSettings);
+TTF_SizeText(digitalFont, textCognitiveStats, &textWidthCognitiveStat, &textHeightCognitiveStat);
+TTF_SizeText(digitalFont, textDataStats, &textWidthDataStats, &textHeightDataStats);
+TTF_SizeText(digitalFont, textTargets, &textWidthTargets, &textHeightTargets);
+TTF_SizeText(digitalFont, textSystemHealth, &textWidthSystemHealth, &textHeightSystemHealth);
+
+
+         HomeiconX = 0;
+         ProfileiconX = 0;
+         SettingsiconX = 0;
+         CognitiveStatsiconX = 0;
+         DataStatsiconX = 0;
+         TargetsiconX = 0;
+         SystemHealthiconX = 0;
+
+SDL_Texture* homeIconTexture = loadTexture("C:/NEW/assets/HOME.jpg", renderer);
+SDL_Texture* profileIconTexture = loadTexture("C:/NEW/assets/USERPROFILE.jpg", renderer);
+SDL_Texture* settingsIconTexture = loadTexture("C:/NEW/assets/SETTINGS.jpg", renderer);
+SDL_Texture* cognitiveStatsIconTexture = loadTexture("C:/NEW/assets/BRAIN.jpg", renderer);
+SDL_Texture* dataStatsIconTexture = loadTexture("C:/NEW/assets/FILES.jpg", renderer);
+SDL_Texture* targetsIconTexture = loadTexture("C:/NEW/assets/targets.jpg", renderer);
+SDL_Texture* systemHealthIconTexture = loadTexture("C:/NEW/assets/SYSTEMHEALTHCARE.png", renderer);
+
+
+
+// Now create and render the icons with these calculated Y positions
+ SDL_Rect Homeicon = {HomeiconX, (int)HomeiconY, HomeiconWidth, HomeiconHeight};
+ SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+ SDL_RenderCopy(renderer, homeIconTexture, NULL, &Homeicon);
+
+ SDL_Rect Profileicon = {ProfileiconX, (int)ProfileiconY, ProfileiconWidth, ProfileiconHeight};
+SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+ SDL_RenderCopy(renderer, profileIconTexture, NULL, &Profileicon);
+
+ SDL_Rect Settingsicon = {SettingsiconX, (int)SettingsiconY, SettingsiconWidth, SettingsiconHeight};
+ SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+ SDL_RenderCopy(renderer, settingsIconTexture, NULL, &Settingsicon);
+
+ SDL_Rect CognitiveStatsicon = {CognitiveStatsiconX, (int)CognitiveStatsiconY, CognitiveStatsiconWidth, CognitiveStatsiconHeight};
+ SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+ SDL_RenderCopy(renderer, cognitiveStatsIconTexture, NULL, &CognitiveStatsicon);
+
+ SDL_Rect DataStatsicon = {DataStatsiconX, (int)DataStatsiconY, DataStatsiconWidth, DataStatsiconHeight};
+ SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+ SDL_RenderCopy(renderer, dataStatsIconTexture, NULL, &DataStatsicon);
+
+ SDL_Rect Targetsicon = {TargetsiconX, (int)TargetsiconY, TargetsiconWidth, TargetsiconHeight};
+ SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+ SDL_RenderCopy(renderer, targetsIconTexture, NULL, &Targetsicon);
+
+ SDL_Rect SystemHealthicon = {SystemHealthiconX, (int)SystemHealthiconY, SystemHealthiconWidth, SystemHealthiconHeight};
+ SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+ SDL_RenderCopy(renderer, systemHealthIconTexture, NULL, &SystemHealthicon);
+
+
+// Load the smaller font for icon labels
+TTF_Font* smallFont = TTF_OpenFont("C:/NEW/assets/Nunito-Regular.ttf", 12);
+
+// Render the icon labels
+renderText(textHome, HomeiconX, HomeiconY +HomeiconHeight, white, smallFont, renderer);
+renderText(textProfile, ProfileiconX, ProfileiconY +ProfileiconHeight, white, smallFont, renderer);
+renderText(textSettings, SettingsiconX, SettingsiconY +SettingsiconHeight, white, smallFont, renderer);
+renderText(textCognitiveStats, CognitiveStatsiconX, CognitiveStatsiconY +CognitiveStatsiconHeight, white, smallFont, renderer);
+renderText(textDataStats, DataStatsiconX , DataStatsiconY +DataStatsiconHeight, white, smallFont, renderer);
+renderText(textTargets, TargetsiconX, TargetsiconY +TargetsiconHeight, white, smallFont, renderer);
+renderText(textSystemHealth, SystemHealthiconX, SystemHealthiconY +SystemHealthiconHeight, white, smallFont, renderer);
+
+
+// Cleanup smallFont
+TTF_CloseFont(smallFont);
+
+
+
+SDL_DestroyTexture(homeIconTexture);
+SDL_DestroyTexture(profileIconTexture);
+SDL_DestroyTexture(settingsIconTexture);
+SDL_DestroyTexture(cognitiveStatsIconTexture);
+SDL_DestroyTexture(dataStatsIconTexture);
+SDL_DestroyTexture(targetsIconTexture);
+SDL_DestroyTexture(systemHealthIconTexture);
+
+// Quit SDL_image (somewhere in your cleanup code)
+IMG_Quit();
+    }
+
+   virtual  void cleanup() override {
+        // Implement cleanup logic if needed
+    }
+};
+
+
+
+
+
+// MainDashboardState class
+class MainDashboardScreenState : public NavigationMenu {
+    private:
+        std::string SearchElement;
+        bool enteringSearchElement;
+
+
+
+        int SearchboxWidth=500;
+        int SearchboxHeight=30;
+        int SearchboxX, SearchboxY;
+      
+        int textWidthSearch, textHeightSearch, textXSearch,textYSearch;
+
+        int SearchiconWidth=22;
+        int SearchiconHeight=22;
+       int SearchiconX,SearchiconY;
+
+
+
+
+
+
+ 
+// Text (e.g., articles, blog posts, web pages)
+// PDFs (e.g., reports, research papers, manuals)
+// Images (e.g., photos, graphics, illustrations)
+// Videos (e.g., movies, tutorials, vlogs)
+// Audio (e.g., podcasts, music, sound effects)
+// Spreadsheets (e.g., data sheets, financial reports)
+// Presentations (e.g., slideshows, pitch decks)
+// Code (e.g., source code, scripts, software)
+// 3D Models (e.g., CAD files, 3D renders)
+// E-books (e.g., digital books, manuals)
+
+
+
+
+
+
+int textWidthAll, textWidthText, textWidthPDFs, textWidthImages , textWidthVideos, textWidthAudio , textWidthSpreadsheets , textWidthPresentations , textWidthCode , textWidth3DModels , textWidthEbooks ;
+
+int textHeightAll, textHeightText, textHeightPDFs, textHeightImages, textHeightVideos, textHeightAudio , textHeightSpreadsheets , textHeightPresentations , textHeightCode , textHeight3DModels , textHeightEbooks ;
+
+
+int textXAll, textXText, textXPDFs,textXImages,textXVideos, textXAudio, textXSpreadsheets,textXPresentations , textXCode, textX3DModels,textXEbooks ;
+
+int textYAll,textYText, textYPDFs, textYImages, textYVideos, textYAudio, textYSpreadsheets ,textYPresentations, textYCode, textY3DModels,textYEbooks ;
+
+
+
+
+    public:
+        MainDashboardScreenState(SDL_Window *window, SDL_Renderer *renderer, TTF_Font *digitalFont) : NavigationMenu(window, renderer, digitalFont),SearchElement(""),enteringSearchElement(true)
+ 
+        {
+
+
+           SDL_StartTextInput();
     }
     
     void handleEvents(SDL_Event& event) override {
-        // Handle events specific to it
+        NavigationMenu::handleEvents(event);
+        if (event.type == SDL_TEXTINPUT) {
+        if (enteringSearchElement) {
+            SearchElement += event.text.text;
+        }}
+        else if (event.type == SDL_KEYDOWN) {
+        switch (event.key.keysym.sym) {
+            case SDLK_BACKSPACE:
+ if (enteringSearchElement && !SearchElement .empty()) {
+                    SearchElement .pop_back();
+                }
+                break;
+                // case SDLK_RETURN:
+                // enter key would search for that data and bring that up but that would be implemented later on 
+default:
+                break;
+        }
+    }  else if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_FINGERDOWN) {
+        int mouseX, mouseY;
+
+        if (event.type == SDL_MOUSEBUTTONDOWN) {
+            mouseX = event.button.x;
+            mouseY = event.button.y;
+        } else { // SDL_FINGERDOWN
+            mouseX = event.tfinger.x * Width;
+            mouseY = event.tfinger.y * Height;
+        }
+
+        std::cout << "Click at (" << mouseX << ", " << mouseY << ")" << std::endl;
+ if (mouseX >= SearchboxX && mouseX <= SearchboxX + SearchboxWidth && mouseY >= SearchboxY && mouseY <= SearchboxY + SearchboxHeight) {
+            enteringSearchElement = true;}
+    }
+
+
+
+//next i need to handle event clicks for different data types and that should be connected to some kind of fillter system to bring only that data for me 
     }
     
     void update() override {
-        // Update logic for it
+         NavigationMenu:: update();
     }
     
     void render() override {
+        NavigationMenu::render();
+        SDL_Color white = {255, 255, 255, 255};
+        SDL_Color grey = {100, 100, 100, 255};
+        SDL_Color black = {0, 0, 0, 255};
+        SDL_Color darkgreen = {0, 50, 0, 255};
+        SDL_Color maroon = {128, 0, 0, 255};
+
+        SearchboxY = ((Height - SearchboxHeight) / 2) - 250;
+        textYSearch = SearchboxY;
+
+        textYAll = SearchboxY + (Height / 17);
+        textYText = SearchboxY + (Height / 17);
+        textYPDFs = SearchboxY + (Height / 17);
+        textYImages = SearchboxY + (Height / 17);
+        textYVideos = SearchboxY + (Height / 17);
+
+        textYAudio = SearchboxY + (Height / 17);
+        textYSpreadsheets = SearchboxY + (Height / 17);
+        textYPresentations = SearchboxY + (Height / 17);
+        textYCode = SearchboxY + (Height / 17);
+        textY3DModels = SearchboxY + (Height / 17);
+        textYEbooks = SearchboxY + (Height / 17);
+
+        // Calculate positions based on proportional spacing
+        SearchiconY = SearchboxY + 3;
+
+        std::string textSearch = "Search" + SearchElement;
+
+        const char *textAll = "All";
+        const char *textText = "Text";
+        const char *textPDFs = "PDFs";
+        const char *textImages = "Images";
+        const char *textVideos = "Videos";
+        const char *textAudio = " Audio";
+        const char *textSpreadsheets = "Spreadsheets";
+        const char *textPresentations = "Presentations";
+        const char *textCode = " Code";
+        const char *text3DModels = "3D Models";
+        const char *textEbooks = "E-books ";
+
+        TTF_SizeText(digitalFont, textSearch.c_str(), &textWidthSearch, &textHeightSearch);
+        TTF_SizeText(digitalFont, textAll, &textWidthAll, &textHeightAll);
+        TTF_SizeText(digitalFont, textText, &textWidthText, &textHeightText);
+        TTF_SizeText(digitalFont, textPDFs, &textWidthPDFs, &textHeightPDFs);
+        TTF_SizeText(digitalFont, textImages, &textWidthImages, &textHeightImages);
+        TTF_SizeText(digitalFont, textVideos, &textWidthVideos, &textHeightVideos);
+        TTF_SizeText(digitalFont, textAudio, &textWidthAudio, &textHeightAudio);
+        TTF_SizeText(digitalFont, textSpreadsheets, &textWidthSpreadsheets, &textHeightSpreadsheets);
+        TTF_SizeText(digitalFont, textPresentations, &textWidthPresentations, &textHeightPresentations);
+        TTF_SizeText(digitalFont, textCode, &textWidthCode, &textHeightCode);
+        TTF_SizeText(digitalFont, text3DModels, &textWidth3DModels, &textHeight3DModels);
+        TTF_SizeText(digitalFont, textEbooks, &textWidthEbooks, &textHeightEbooks);
+
+        SearchboxX = (Width - SearchboxWidth) / 2;
+        ;
+        SearchiconX = SearchboxX + SearchboxWidth - SearchiconWidth - 10;
+
+        textXSearch = (Width - textWidthSearch) / 2;
+        ;
+
+        textXAll = SearchboxX + ((SearchboxWidth - textWidthAll) / 2) - 380;
+
+        textXText = textXAll + textWidthAll + 10;
+        textXPDFs = textXText + textWidthText + 10;
+        textXImages = textXPDFs + textWidthPDFs + 10;
+        textXVideos = textXImages + textWidthImages + 10;
+        textXAudio = textXVideos + textWidthVideos + 10;
+        textXSpreadsheets = textXAudio + textWidthAudio + 10;
+        textXPresentations = textXSpreadsheets + textWidthSpreadsheets + 10;
+        textXCode = textXPresentations + textWidthPresentations + 10;
+        textX3DModels = textXCode + textWidthCode + 10;
+        textXEbooks = textX3DModels + textWidth3DModels + 10;
+
+        renderRoundedRect(renderer, SearchboxX, SearchboxY, SearchboxWidth, SearchboxHeight, radius, white);
+
+        // Render Search
+        if (enteringSearchElement && !SearchElement.empty())
+        {
+            renderText(SearchElement.c_str(), SearchboxX, SearchboxY, black, digitalFont, renderer);
+    } else {
+
+ if (SearchElement.empty()) {
+         renderText("Search", textXSearch, textYSearch, grey, digitalFont, renderer);
+    } else {
+        renderText(SearchElement.c_str(), SearchboxX, SearchboxY, black, digitalFont, renderer);
+    }
+}
+
+SDL_Texture* SearchIconTexture = loadTexture("C:/NEW/assets/searchiconn.png", renderer);
+// SDL_Texture* BellIconTexture = loadTexture("C:/NEW/assets/bell.jpg", renderer);
+
+
+ SDL_Rect Searchicon = {SearchiconX, SearchiconY, SearchiconWidth, SearchiconHeight};
+ 
+       SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+         SDL_RenderCopy(renderer,SearchIconTexture, NULL, &Searchicon);
+
+
+ renderText(textAll, textXAll, textYAll, white, digitalFont, renderer);
+renderText(textText, textXText, textYText, white, digitalFont, renderer);
+renderText(textPDFs, textXPDFs, textYPDFs, white, digitalFont, renderer);
+renderText(textImages, textXImages, textYImages, white, digitalFont, renderer);
+renderText(textVideos, textXVideos, textYVideos, white, digitalFont, renderer);
+renderText(textAudio, textXAudio, textYAudio, white, digitalFont, renderer);
+renderText(textSpreadsheets, textXSpreadsheets, textYSpreadsheets, white, digitalFont, renderer);
+renderText(textPresentations, textXPresentations, textYPresentations, white, digitalFont, renderer);
+renderText(textCode, textXCode, textYCode, white, digitalFont, renderer);
+renderText(text3DModels, textX3DModels, textY3DModels, white, digitalFont, renderer);
+renderText(textEbooks, textXEbooks, textYEbooks, white, digitalFont, renderer);
+
+SDL_DestroyTexture(SearchIconTexture);
+
+// Quit SDL_image (somewhere in your cleanup code)
+IMG_Quit();
+
+
+
+
+
+
+
+
+
+        
        
-        
-        SDL_Color white = { 255, 255, 255, 255 };
-        
-        renderText("Next Screen", 100, 50, white, digitalFont, renderer);
     }
     void cleanup() override {
-        // Implement cleanup logic 
+        NavigationMenu::cleanup();
     }
 };
 
@@ -1840,11 +2390,7 @@ bool enteringverificationCode;
 
 int boxPadding = 20;
 
-SDL_Rect EmailBoxRect;
-SDL_Rect SendCodeBoxRect;
-SDL_Rect verificationCodeBoxRect;
-SDL_Rect VerifyRect;
-SDL_Rect supportBoxRect;
+
 
 int textWidth1, textHeight1;
     int textWidth2a, textHeight2a;
@@ -2146,37 +2692,16 @@ SDL_Rect outerBox = { boxX, boxY, boxWidth, boxHeight };
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderFillRect(renderer, &outerBox);
 
-
-SDL_Rect EmailBox = { EmailBoxX, EmailBoxY, EmailBoxWidth, EmailBoxHeight };
- // Set the color for the fill (white)
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderFillRect(renderer, &EmailBox);
-
-
-SDL_Rect SendCodeBox  = { SendCodeBoxX, SendCodeBoxY, SendCodeBoxWidth,SendCodeBoxHeight };
-    // Set the color for the fill (darkgreeen)
-   SDL_SetRenderDrawColor(renderer, 0, 50, 0, 255); // Darkest green color
-    SDL_RenderFillRect(renderer, &SendCodeBox);
-
-SDL_Rect  verificationCodeBox= { verificationCodeBoxX, verificationCodeBoxY, verificationCodeBoxWidth,verificationCodeBoxHeight };
- // Set the color for the fill (white)
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderFillRect(renderer, &verificationCodeBox);
-
-
-SDL_Rect Verify = { VerifyX, VerifyY, VerifyWidth,VerifyHeight };
-    // Set the color for the fill (darkgreeen)
-   SDL_SetRenderDrawColor(renderer, 0, 50, 0, 255); // Darkest green color
-    SDL_RenderFillRect(renderer, &Verify);
-
-SDL_Rect supportBox = { supportBoxX, supportBoxY, supportBoxWidth,supportBoxHeight };
- // Set the color for the fill (white)
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderFillRect(renderer, &supportBox);
-
-
-
-
+     renderRoundedRect(renderer, EmailBoxX, EmailBoxY, EmailBoxWidth, EmailBoxHeight, radius, white);
+      
+           renderRoundedRect(renderer,SendCodeBoxX, SendCodeBoxY, SendCodeBoxWidth,SendCodeBoxHeight, radius,darkgreen);
+      
+           renderRoundedRect(renderer, verificationCodeBoxX, verificationCodeBoxY, verificationCodeBoxWidth,verificationCodeBoxHeight, radius, white);
+      
+           renderRoundedRect(renderer, VerifyX, VerifyY, VerifyWidth,VerifyHeight, radius, darkgreen);
+      
+           renderRoundedRect(renderer, supportBoxX, supportBoxY, supportBoxWidth,supportBoxHeight, radius, grey);
+      
 
 
 // Render text inside boxes
@@ -2187,14 +2712,6 @@ SDL_Rect supportBox = { supportBoxX, supportBoxY, supportBoxWidth,supportBoxHeig
     renderText(text6, textX6, textY6, white, digitalFont, renderer); 
     renderText(text7, textX7, textY7, white, digitalFont, renderer); 
     renderText(text8, textX8, textY8, black, digitalFont, renderer); 
-
-
-    // renderText(VerificationExpireMessage, textXVerificationMessage, textYVerificationMessage, VerificationMessageColor, digitalFont, renderer); 
-    // renderText(VerificationIncorrectMessage, textXVerificationMessage, textYVerificationMessage, VerificationMessageColor, digitalFont, renderer); 
-    // renderText(VerificationSuccessMessage, textXVerificationMessage, textYVerificationMessage, VerificationMessageColor, digitalFont, renderer); 
-
-    // here i need to make sure that all 3 of them wont be reendered at the sam eime becasue i dont want to rendere all od them i need to put some switchstaetmetns or if else or soemthing 
-
 // Only render the relevant message based on the flags
     if (renderExpireMessage) {
         if (TTF_SizeText(digitalFont, VerificationExpireMessage.c_str(), &textWidthVerificationMessage, &textHeightVerificationMessage) == 0) {
@@ -2243,13 +2760,8 @@ if (userInput.empty()) {
         isEmailInput = false;
         renderText( phoneNumber.c_str(), EmailBoxX, EmailBoxY, black, digitalFont, renderer);
     }
-    }
-
-
-   
-    
+    }  
 }
-
    // RenderverificationCode
   if (enteringverificationCode && !verificationCode.empty()) {
         renderText(verificationCode.c_str(), verificationCodeBoxX, verificationCodeBoxY, black, digitalFont, renderer);
@@ -2261,26 +2773,11 @@ if (userInput.empty()) {
     }
        
     }
-
-
-    
-    
-   
-
-
-
-
-
-
- SDL_RenderPresent(renderer);
-
-
+SDL_RenderPresent(renderer);
     }
-
     virtual void cleanup() override {
         // Implement cleanup logic if needed
     }
-
     // Method to verify if email and username belong to the same user
     bool verifyUser(const std::string& email, const std::string& username) {
         // Implementation to verify in your database or user management system
@@ -2289,39 +2786,20 @@ if (userInput.empty()) {
     }
      virtual ~Verification() = default;
 };
-
-
 class FVerificationScreenState :  public  Verification{
 public:
-
-
  FVerificationScreenState (SDL_Window* window, SDL_Renderer* renderer, TTF_Font* digitalFont)
     : Verification (window ,renderer, digitalFont ) 
     {}
-
-
  std::string getVerificationSuccessMessage() const override {
         return "Verification successful! Your account has been created. You can now log in.";
     }
     void handleEvents(SDL_Event& event) override {
-         Verification::handleEvents(event);
-
-
-
-
-
-
-        
-
-    }
-
+         Verification::handleEvents(event);}
     void update() override {
         Verification:: update ();
     }
-
     void render() override {
-      
-
 const char* text1 = "Please verify your email/phone to complete the sign-up process.";
 const char* text2a = "We will send a verification code  ";
 const char* text2b = " to the provided email or phone number";
@@ -2334,15 +2812,9 @@ const char* text6 = "Verify"; // Verify button
 
 const char* text7 = "Didn't receive the code? Resend"; // Resend link
 const char* text8 = "Need help? Contact support"; // Contact support link
-
-
-
-
-
 std::string VerificationExpireMessage="The code has expired. Please request a new code.";
 std::string VerificationIncorrectMessage="The code you entered is incorrect. Please try again.";
 std::string VerificationSuccessMessage= getVerificationSuccessMessage();;
-
 Verification::render(text1, text2a, text2b, text3, text4, text5, text6, text7, text8, VerificationExpireMessage,VerificationIncorrectMessage,VerificationSuccessMessage);
     }
 
@@ -2350,11 +2822,8 @@ Verification::render(text1, text2a, text2b, text3, text4, text5, text6, text7, t
         Verification:: cleanup();
     }
 };
-
-
 class SVerificationScreenState :  public Verification{
 public:
-
 SVerificationScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* digitalFont)
     : Verification (window ,renderer, digitalFont )  
     {}
@@ -2362,44 +2831,31 @@ SVerificationScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* d
         return "Verification successful! You can now reset your password.";
     }
     void handleEvents(SDL_Event& event) override {
+       
        Verification::handleEvents(event);
     }
-
     void update() override {
         Verification:: update();
     }
-
     void render() override {
-        
-
         const char *text1 = "Please verify your identity to reset your password.";
         const char *text2a = "We will send a verification code to this email or phone number ";
         const char *text2b = " if it matches an existing Neurabyte account.";
         std::string text3 = "Enter Email Address or Phone " + (isEmailInput ? emailAddress : phoneNumber);
-
         const char *text4 = "Send Code"; // Send code button
-
         std::string text5 = "Enter Verification Code" + verificationCode; // Input verification code
         const char *text6 = "Verify";                                     // Verify button
-
         const char *text7 = "Didn't receive the code? Resend"; // Resend link
         const char *text8 = "Need help? Contact support";      // Contact support link
-
-
-      
-
 std::string VerificationExpireMessage="The code has expired. Please request a new code.";
 std::string VerificationIncorrectMessage="The code you entered is incorrect. Please try again.";
 std::string VerificationSuccessMessage= getVerificationSuccessMessage();;
-
 Verification::render(text1, text2a, text2b, text3, text4, text5, text6, text7, text8, VerificationExpireMessage,VerificationIncorrectMessage,VerificationSuccessMessage);
     }
-
     void cleanup() override {
         Verification:: cleanup();
     }
 };
-
 class PasswordResetScreenState : public State {
 private:
      SDL_Color white = { 255, 255, 255, 255 };
@@ -2407,11 +2863,9 @@ private:
     SDL_Color black = { 0, 0, 0, 255 };
     SDL_Color darkgreen = { 0, 50, 0, 255  }; 
     SDL_Color maroon = { 128, 0, 0, 255 };
-
     std::string newPassword, confirmPassword;
     bool enteringNewPassword;
     bool enteringconfirmPassword;
-
 public:
    PasswordResetScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* digitalFont)
         : State(window, renderer, digitalFont), newPassword(""),confirmPassword(""), enteringNewPassword(true), enteringconfirmPassword(false) {
@@ -2481,7 +2935,212 @@ public:
 
    
 };
+class ProfileScreenState : public NavigationMenu{
+private:
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color grey = { 100, 100, 100, 255 };
+    SDL_Color black = { 0, 0, 0, 255 };
+    SDL_Color darkgreen = { 0, 50, 0, 255 };
+    SDL_Color maroon = { 128, 0, 0, 255 };
 
+public:
+    ProfileScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* digitalFont)
+        : NavigationMenu(window, renderer, digitalFont) {
+        SDL_StartTextInput();
+        // Initialize other necessary variables if needed
+    }
+
+    void handleEvents(SDL_Event& event) override {
+         NavigationMenu::handleEvents(event);
+    }
+
+    void update() override {
+       NavigationMenu:: update();
+    }
+
+    void render() override {
+      NavigationMenu::render();
+//okay so let's start building the prfile screen 
+//because till now everything else is perfectly fine except that  therer is a little bit rendering problem sub kuch ow quality lag rha hy 
+//2. sendinblue authentication ka masla
+//3.sign up screen mn ek box sahi render nhi ho rha
+//4. database sqlite sey change kr k kuch aur krna hy 
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+    void cleanup() override {
+         NavigationMenu::cleanup();
+    }
+};
+//i think so settings screen should be a base class and all other screens should be dereived from it 
+class SettingsScreenState : public NavigationMenu {
+private:
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color grey = { 100, 100, 100, 255 };
+    SDL_Color black = { 0, 0, 0, 255 };
+    SDL_Color darkgreen = { 0, 50, 0, 255 };
+    SDL_Color maroon = { 128, 0, 0, 255 };
+
+public:
+    SettingsScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* digitalFont)
+        : NavigationMenu(window, renderer, digitalFont) {
+        SDL_StartTextInput();
+        // Initialize other necessary variables if needed
+    }
+
+    void handleEvents(SDL_Event& event) override {
+         NavigationMenu::handleEvents(event);
+    }
+
+    void update() override {
+        NavigationMenu:: update();
+    }
+
+    void render() override {
+         NavigationMenu::render();
+    }
+
+    void cleanup() override {
+        NavigationMenu::cleanup();
+    }
+};
+
+class CognitiveStatsScreenState : public NavigationMenu {
+private:
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color grey = { 100, 100, 100, 255 };
+    SDL_Color black = { 0, 0, 0, 255 };
+    SDL_Color darkgreen = { 0, 50, 0, 255 };
+    SDL_Color maroon = { 128, 0, 0, 255 };
+
+public:
+    CognitiveStatsScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* digitalFont)
+        : NavigationMenu(window, renderer, digitalFont) {
+        SDL_StartTextInput();
+        // Initialize other necessary variables if needed
+    }
+
+    void handleEvents(SDL_Event& event) override {
+         NavigationMenu::handleEvents(event);
+    }
+
+    void update() override {
+        NavigationMenu:: update();
+    }
+
+    void render() override {
+         NavigationMenu::render();
+    }
+
+    void cleanup() override {
+         NavigationMenu::cleanup();
+    }
+};
+
+class DataStatsScreenState : public NavigationMenu {
+private:
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color grey = { 100, 100, 100, 255 };
+    SDL_Color black = { 0, 0, 0, 255 };
+    SDL_Color darkgreen = { 0, 50, 0, 255 };
+    SDL_Color maroon = { 128, 0, 0, 255 };
+
+public:
+    DataStatsScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* digitalFont)
+        : NavigationMenu(window, renderer, digitalFont) {
+        SDL_StartTextInput();
+        // Initialize other necessary variables if needed
+    }
+
+    void handleEvents(SDL_Event& event) override {
+        NavigationMenu::handleEvents(event);
+    }
+
+    void update() override {
+        NavigationMenu:: update();
+    }
+
+    void render() override {
+         NavigationMenu::render();
+    }
+
+    void cleanup() override {
+         NavigationMenu::cleanup();}
+};
+
+class TargetsScreenState : public NavigationMenu{
+private:
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color grey = { 100, 100, 100, 255 };
+    SDL_Color black = { 0, 0, 0, 255 };
+    SDL_Color darkgreen = { 0, 50, 0, 255 };
+    SDL_Color maroon = { 128, 0, 0, 255 };
+
+public:
+    TargetsScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* digitalFont)
+        : NavigationMenu(window, renderer, digitalFont) {
+        SDL_StartTextInput();
+        // Initialize other necessary variables if needed
+    }
+
+    void handleEvents(SDL_Event& event) override {
+         NavigationMenu::handleEvents(event);
+    }
+
+    void update() override {
+        NavigationMenu:: update();
+    }
+
+    void render() override {
+         NavigationMenu::render();
+    }
+
+    void cleanup() override {
+        NavigationMenu::cleanup();
+    }
+};
+
+class SystemHealthScreenState : public NavigationMenu{
+private:
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color grey = { 100, 100, 100, 255 };
+    SDL_Color black = { 0, 0, 0, 255 };
+    SDL_Color darkgreen = { 0, 50, 0, 255 };
+    SDL_Color maroon = { 128, 0, 0, 255 };
+
+public:
+    SystemHealthScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* digitalFont)
+        : NavigationMenu(window, renderer, digitalFont) {
+        SDL_StartTextInput();
+        // Initialize other necessary variables if needed
+    }
+
+    void handleEvents(SDL_Event& event) override {
+         NavigationMenu::handleEvents(event);
+    }
+
+    void update() override {
+        NavigationMenu:: update();
+    }
+
+    void render() override {
+         NavigationMenu::render();
+    }
+
+    void cleanup() override {
+        NavigationMenu::cleanup();
+    }
+};
 
 
 
@@ -2493,11 +3152,18 @@ std::map<AppState, SDL_Color> backgroundColors = {
     {SPLASH_SCREEN, {0, 0, 0, 255}},        // Black
     {LOGIN_SCREEN,{50, 50, 50, 255}},    // Dark Grey
     {SIGNUP_SCREEN, {50, 50, 50, 255}},    // Dark Grey
-    {NEXT_SCREEN, {0, 0, 0, 255}},        // Black
+    {MAIN_DASHBOARD, {50,50,50 ,255}},        // Black
     {F_VERIFICATION_SCREEN, {50, 50, 50, 255}},    // Dark Grey
     {S_VERIFICATION_SCREEN, {50, 50, 50, 255}},    // Dark Grey
     {PASSWORD_RESET_SCREEN, {50, 50, 50, 255}},    // Dark Grey
     {HELP_SCREEN, {50, 50, 50, 255}},    // Dark Grey
+    
+    {PROFILE_SCREEN, {50, 50, 50, 255}},    // Dark Grey
+    {SETTINGS_SCREEN, {50, 50, 50, 255}},    // Dark Grey
+    {COGNITIVE_STATS_SCREEN, {50, 50, 50, 255}},    // Dark Grey
+    {DATA_STATS_SCREEN, {50, 50, 50, 255}},    // Dark Grey
+    {TARGETS_SCREEN, {50, 50, 50, 255}},    // Dark Grey
+    {SYSTEM_HEALTH_SCREEN, {50, 50, 50, 255}},    // Dark Grey
     
     // Add other colors for other states as needed
 };
@@ -2525,9 +3191,10 @@ void changeState(AppState newState) {
         case SIGNUP_SCREEN:
             currentStateInstance = std::make_unique<SignupScreenState>(window, renderer, digitalFont);
             break;
-        case NEXT_SCREEN:
-            currentStateInstance = std::make_unique<NextScreenState>(window, renderer, digitalFont);
-            break;
+        case MAIN_DASHBOARD:
+            currentStateInstance = std::make_unique<MainDashboardScreenState>(window, renderer, digitalFont);
+            break; 
+
          case F_VERIFICATION_SCREEN:
             currentStateInstance = std::make_unique<FVerificationScreenState>(window, renderer, digitalFont);
             break;
@@ -2541,7 +3208,24 @@ void changeState(AppState newState) {
         case HELP_SCREEN:
             currentStateInstance = std::make_unique<HelpScreenState>(window, renderer, digitalFont);
             break;
-             
+             case PROFILE_SCREEN:
+            currentStateInstance = std::make_unique<ProfileScreenState>(window, renderer, digitalFont);
+            break;
+             case SETTINGS_SCREEN:
+            currentStateInstance = std::make_unique<SettingsScreenState>(window, renderer, digitalFont);
+            break;
+             case COGNITIVE_STATS_SCREEN:
+            currentStateInstance = std::make_unique<CognitiveStatsScreenState>(window, renderer, digitalFont);
+            break;
+             case DATA_STATS_SCREEN:
+            currentStateInstance = std::make_unique<DataStatsScreenState>(window, renderer, digitalFont);
+            break;
+             case TARGETS_SCREEN:
+            currentStateInstance = std::make_unique<TargetsScreenState>(window, renderer, digitalFont);
+            break;
+             case SYSTEM_HEALTH_SCREEN:
+            currentStateInstance = std::make_unique<SystemHealthScreenState>(window, renderer, digitalFont);
+            break;
         default:
             // Handle default case or error condition
             break;
@@ -2565,6 +3249,16 @@ void changeState(AppState newState) {
 
 // Main function
 int main(int argc, char* argv[]) {
+
+
+
+
+
+// Initialize SDL_image (somewhere in your initialization code)
+if (IMG_Init(IMG_INIT_PNG) == 0) {
+    std::cerr << "Failed to initialize SDL_image: " << IMG_GetError() << std::endl;
+    return -1;
+}
 
 //intilaizing and opeening connecction ot sqlite database 
 sqlite3* db;
