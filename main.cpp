@@ -7,14 +7,10 @@
 #include <map>//For associative containers.
 #include <string>
 #include <sodium.h>//For cryptographic operations (Argon2 hashing).
-#include <sqlite3.h>//For SQLite database operations.
-
-
 #include <random>//For generating random numbers 
 #include <ctime>//For handling time-related functions.
 #include <regex>//For regular expressions.
 #include <cmath>
-
 //Boost.Beast sends the JSON data via an HTTPS request to Sendinblue's API.and then Sendinblue processes the request and delivers the message.
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -29,7 +25,50 @@
 
 #include <cstdlib>  // For std::getenv
 #include <algorithm> // Including  this header for std::max
-//#include <nfd.h> // Include native file dialog library
+
+#include <iostream>
+#include <libpq-fe.h>//for database
+
+
+
+/*
+CI/CD Pipeline	GitHub  ✓
+Build System	CMake, GCC	✓
+Rendering & UI	SDL, SDL_ttf	✓
+Password Hashing	Argon2	✓
+
+
+Database	PostgreSQL	✓
+
+
+Storage	OpenStack Swift	   Storing user-uploaded files or media content. this  would be used for the back end and for the front end i was thingking of using //#include <nfd.h> // Include native file dialog library
+ but i think so i can get better things then 
+so now i am thinking of using qt instead of using nfd so 
+for 
+
+Frontend Interface	Qt
+Backend Handling	REST API
+File Storage	OpenStack Swift
+
+
+
+Monitoring & Logging	Prometheus, Grafana	    Monitoring application health and performance metrics.
+
+Compute Power	BOINC	
+Content Delivery	CoralCDN	
+Scalability	Kubernetes	
+Security	Let's Encrypt, OpenSSL	
+Data Centers	Community-Driven	
+
+Web Server	Nginx/Apache	
+
+
+
+ */
+
+
+
+
 
 
 using namespace std;
@@ -186,22 +225,39 @@ void DrawCircle(SDL_Renderer* renderer, int centerX, int centerY, int circleradi
 
 
 
-
 class User {
 private:
     std::string emailAddress;
     std::string username;
-    std::string password;
+    std::string hashedPassword;
+    std::string phoneNumber;
+    std::string GVCode;
+    time_t codeGenerationTime;
 
 public:
     User(const std::string& userEmail, const std::string& userName, const std::string& pass)
-        : emailAddress(userEmail), username(userName), password(pass) {}
+        : emailAddress(userEmail), username(userName), hashedPassword(pass), phoneNumber(""), GVCode(""), codeGenerationTime(0) {}
 
     // Getters and setters as needed
     std::string getEmailAddress() const { return emailAddress; }
+    void setEmailAddress(const std::string& email) { emailAddress = email; }
+
     std::string getUsername() const { return username; }
-    std::string getPassword() const { return password; }
+    void setUsername(const std::string& userName) { username = userName; }
+
+    std::string getHashedPassword() const { return hashedPassword; }
+    void setHashedPassword(const std::string& pass) { hashedPassword = pass; }
+
+    std::string getPhoneNumber() const { return phoneNumber; }
+    void setPhoneNumber(const std::string& phone) { phoneNumber = phone; }
+
+    std::string getGVCode() const { return GVCode; }
+    void setGVCode(const std::string& code) { GVCode = code; }
+
+    time_t getCodeGenerationTime() const { return codeGenerationTime; }
+    void setCodeGenerationTime(time_t time) { codeGenerationTime = time; }
 };
+
 
 // Function to render text
 void renderText(const std::string& message, int x, int y, SDL_Color color, TTF_Font* font, SDL_Renderer* renderer) {
@@ -226,88 +282,6 @@ std::string apiKey;  // Store the API key
             return "";
         }
     };//Neurabyte_AccountVerification_Key
-    
-
-sqlite3* db;
-
-// Function to initialize the database and create tables
-bool initializeDatabase(const std::string& dbName) {
-    if (sqlite3_open(dbName.c_str(), &db) != SQLITE_OK) {
-        std::cerr << "Error opening SQLite database: " << sqlite3_errmsg(db) << std::endl;
-        return false;
-    }
-
-    // Create users table
-    const char* createUsersTableSQL = R"(
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            emailAddress TEXT NOT NULL UNIQUE,
-            username TEXT NOT NULL,
-            password TEXT NOT NULL
-        );
-    )";
-
-    char* errorMessage = nullptr;
-    if (sqlite3_exec(db, createUsersTableSQL, nullptr, nullptr, &errorMessage) != SQLITE_OK) {
-        std::cerr << "SQL error creating users table: " << errorMessage << std::endl;
-        sqlite3_free(errorMessage);
-        sqlite3_close(db);
-        db = nullptr; // Ensure db is set to nullptr if there is an error
-        return false;
-    }
-
-    // Create verification_codes table
-    const char* createVerificationCodesTableSQL = R"(
-        CREATE TABLE IF NOT EXISTS verification_codes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT,
-            phone_number TEXT,
-            GVCode TEXT NOT NULL,
-            expiration_time INTEGER NOT NULL,
-            CHECK (email IS NOT NULL OR phone_number IS NOT NULL),
-            CHECK (email IS NULL OR phone_number IS NULL)
-        );
-    )";
-
-    if (sqlite3_exec(db, createVerificationCodesTableSQL, nullptr, nullptr, &errorMessage) != SQLITE_OK) {
-        std::cerr << "SQL error creating verification_codes table: " << errorMessage << std::endl;
-        sqlite3_free(errorMessage);
-        sqlite3_close(db);
-        db = nullptr; // Ensure db is set to nullptr if there is an error
-        return false;
-    }
-
-    // Create user_agreements table
-    const char* createUserAgreementsTableSQL = R"(
-        CREATE TABLE IF NOT EXISTS user_agreements (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL,
-            email_address TEXT NOT NULL,
-            consent_forms INTEGER NOT NULL,
-            license_agreements INTEGER NOT NULL,
-            terms_of_service INTEGER NOT NULL
-        );
-    )";
-
-    if (sqlite3_exec(db, createUserAgreementsTableSQL, nullptr, nullptr, &errorMessage) != SQLITE_OK) {
-        std::cerr << "SQL error creating user_agreements table: " << errorMessage << std::endl;
-        sqlite3_free(errorMessage);
-        sqlite3_close(db);
-        db = nullptr; // Ensure db is set to nullptr if there is an error
-        return false;
-    }
-
-    // Leave the database connection open for later use
-    return true;
-}
-
-
-
-
-
-
-
-
 
 
 std::string hashPassword(const std::string& password) {
@@ -321,226 +295,7 @@ std::string hashPassword(const std::string& password) {
     }
     return std::string(hash);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-bool insertUser(sqlite3* db,const User &user);
-void setCurrentUser(const std::string &emailAddress, const std::string &username, const std::string &hashedPassword);
-bool emailExists(const std::string &emailAddress);
-
-void saveAgreementsToDatabase(sqlite3 *db, const User &user, bool isCheckbox1Checked, bool isCheckbox2Checked, bool isCheckbox3Checked);
-
-void CreateUser(sqlite3* db, const std::string& username, const std::string& emailAddress, const std::string& password) {
-    // Validate user data (this step is simplified; in real applications, you should perform thorough validation)
-    if (username.empty() || emailAddress.empty() || password.empty()) {
-        std::cerr << "Error: All fields are required." << std::endl;
-        return;
-    }
-    // Check if the email address already exists
-    if (emailExists(emailAddress)) {
-        std::cerr << "Error: Email address already exists." << std::endl;
-        return;
-    }
-    // Hash the user's password
-    std::string hashedPassword = hashPassword(password);
-
-    // Create a User object
-    User newUser(emailAddress, username, hashedPassword);
-
-    // Save the new user to the database
-    if (!insertUser(db, newUser)) {
-        std::cerr << "Error: Failed to save user to database." << std::endl;
-    } else {
-        std::cout << "User created successfully." << std::endl;
-        // Set the current user
-        setCurrentUser(emailAddress, username, hashedPassword);
-    }
-}
-bool insertUser(sqlite3* db, const User& user) {
-    const char* insertSQL = "INSERT INTO users (emailAddress, username, password) VALUES (?, ?, ?)";
-    sqlite3_stmt* stmt;
-    if (sqlite3_prepare_v2(db, insertSQL, -1, &stmt, nullptr) != SQLITE_OK) {
-        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
-        return false;
-    }
-    if (sqlite3_bind_text(stmt, 1, user.getEmailAddress().c_str(), -1, SQLITE_TRANSIENT) != SQLITE_OK ||
-        sqlite3_bind_text(stmt, 2, user.getUsername().c_str(), -1, SQLITE_TRANSIENT) != SQLITE_OK ||
-        sqlite3_bind_text(stmt, 3, user.getPassword().c_str(), -1, SQLITE_TRANSIENT) != SQLITE_OK) {
-        std::cerr << "Failed to bind parameters: " << sqlite3_errmsg(db) << std::endl;
-        sqlite3_finalize(stmt);
-        return false;
-    }
-
-    if (sqlite3_step(stmt) != SQLITE_DONE) {
-        std::cerr << "Failed to execute statement: " << sqlite3_errmsg(db) << std::endl;
-        sqlite3_finalize(stmt);
-        return false;
-    }
-
-    sqlite3_finalize(stmt);
-    return true;
-}
-
-
-void setCurrentUser(const std::string& emailAddress, const std::string& username, const std::string& hashedPassword) {
-    currentUser = std::make_unique<User>(emailAddress, username, hashedPassword);
-}
-
-bool emailExists(const std::string& emailAddress) {
-    if (db == nullptr) {
-        std::cerr << "Database connection is null." << std::endl;
-        return true; // Assume email exists to prevent further errors
-    }
-
-    sqlite3_stmt* stmt;
-    const char* sql = "SELECT COUNT(*) FROM users WHERE emailAddress = ?";
-
-    // Prepare the SQL statement
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
-        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
-        return true; // Assume email exists to prevent further errors
-    }
-
-    // Bind the parameter
-    sqlite3_bind_text(stmt, 1, emailAddress.c_str(), -1, SQLITE_STATIC);
-
-    // Execute the statement
-    int result = sqlite3_step(stmt);
-    bool exists = (result == SQLITE_ROW && sqlite3_column_int(stmt, 0) > 0);
-
-    // Finalize the statement
-    sqlite3_finalize(stmt);
-
-    return exists;
-}
-
-
-
-bool validateLogin(const std::string& username, const std::string& password) {
-    sqlite3* db;
-    sqlite3_stmt* stmt;
-    const char* sql = "SELECT username, password FROM users WHERE username = ?";
-
-    // Open the database
-    if (sqlite3_open("C:/NEW/neurabyte.db", &db) != SQLITE_OK) {
-        std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
-        return false;
-    }
-
-    // Prepare the SQL statement
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
-        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
-        sqlite3_close(db);
-        return false;
-    }
-
-    // Bind the username parameter
-    if (sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_STATIC) != SQLITE_OK) {
-        std::cerr << "Failed to bind parameter: " << sqlite3_errmsg(db) << std::endl;
-        sqlite3_finalize(stmt);
-        sqlite3_close(db);
-        return false;
-    }
-
-    // Execute the statement and check if a row was returned
-    int result = sqlite3_step(stmt);
-    if (result == SQLITE_ROW) {
-        // Retrieve the username and hashed password from the database
-        std::string dbUsername = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-        std::string hashedPassword = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
-
-        // Verify the username and password using libsodium's function
-        if (dbUsername == username && crypto_pwhash_str_verify(hashedPassword.c_str(), password.c_str(), password.length()) == 0) {
-            // Username and password match, login successful
-            sqlite3_finalize(stmt);
-            sqlite3_close(db);
-            return true;
-        }
-    }
-
-    // Finalize and close database
-    sqlite3_finalize(stmt);
     
-
-    // If execution reaches here, login failed
-    return false;
-}
-// Function to detect if the input is an email
-bool isEmail(const std::string& input) {
-    const std::regex pattern("[\\w.%+-]+@[\\w.-]+\\.[a-zA-Z]{2,}");
-    return std::regex_match(input, pattern);
-}
-
-
-
-// Function to save agreements to the database
-void saveAgreementsToDatabase(sqlite3* db, const User& user, bool isCheckbox1Checked, bool isCheckbox2Checked, bool isCheckbox3Checked) {
-    if (db == nullptr) {
-        std::cerr << "Database connection is null." << std::endl;
-        return;
-    }
-
-    std::string query = "INSERT INTO user_agreements (username, email_address, consent_forms, license_agreements, terms_of_service) VALUES (?, ?, ?, ?, ?);";
-    sqlite3_stmt* stmt;
-    int result = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);
-    if (result != SQLITE_OK) {
-        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
-        return;
-    }
-
-    // Use getters to retrieve user data
-    sqlite3_bind_text(stmt, 1, user.getUsername().c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, user.getEmailAddress().c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 3, isCheckbox1Checked ? 1 : 0);
-    sqlite3_bind_int(stmt, 4, isCheckbox2Checked ? 1 : 0);
-    sqlite3_bind_int(stmt, 5, isCheckbox3Checked ? 1 : 0);
-
-    result = sqlite3_step(stmt);
-    if (result != SQLITE_DONE) {
-        std::cerr << "Failed to insert data: " << sqlite3_errmsg(db) << std::endl;
-    }
-
-    sqlite3_finalize(stmt);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Function to generate a random verification code
 std::string generateVerificationCode() {
@@ -558,46 +313,6 @@ std::string generateVerificationCode() {
     }
     return code;
 }
-
-// Function to store the verification code and its expiration time in the SQLite database
-void storeEmailCodeInDatabase(const std::string& emailAddress, const std::string& GVCode) {
-    sqlite3* db;
-    sqlite3_stmt* stmt;
-    std::string sql = "INSERT INTO verification_codes (email, code, expiration_time) VALUES (?, ?, ?);";
-    
-    // Open database
-    if (sqlite3_open("C:/NEW/neurabyte.db", &db) != SQLITE_OK) {
-        std::cerr << "Failed to open database: " << sqlite3_errmsg(db) << std::endl;
-        return;
-    }
-
-    // Prepare SQL statement
-    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
-        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
-        sqlite3_close(db);
-        return;
-    }
-
-    // Set parameters
-    sqlite3_bind_text(stmt, 1, emailAddress.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, GVCode.c_str(), -1, SQLITE_STATIC);
-
-    // Set expiration time to 10 minutes from now
-    std::time_t expirationTime = std::time(nullptr) + 600; // 600 seconds = 10 minutes
-    sqlite3_bind_int(stmt, 3, expirationTime);
-
-    // Execute statement
-    if (sqlite3_step(stmt) != SQLITE_DONE) {
-        std::cerr << "Failed to execute statement: " << sqlite3_errmsg(db) << std::endl;
-    }
-
-    // Clean up
-    sqlite3_finalize(stmt);
-    
-}
-
-
-
 
 std::string sendVerificationCodeToEmail(const std::string& emailAddress) {
     std::string apiKey;
@@ -765,43 +480,6 @@ try {
 
 
 
-// Hypothetical Twilio wrapper
-
-void storePhoneCodeInDatabase(const std::string& phoneNumber, const std::string& GVCode) {
-    sqlite3* db;
-    sqlite3_stmt* stmt;
-    std::string sql = "INSERT INTO verification_codes (phone_number, code, expiration_time) VALUES (?, ?, ?);";
-    
-    // Open database
-    if (sqlite3_open("C:/NEW/neurabyte.db", &db) != SQLITE_OK) {
-        std::cerr << "Failed to open database: " << sqlite3_errmsg(db) << std::endl;
-        return;
-    }
-
-    // Prepare SQL statement
-    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
-        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
-        sqlite3_close(db);
-        return;
-    }
-
-    // Set parameters
-    sqlite3_bind_text(stmt, 1, phoneNumber.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, GVCode.c_str(), -1, SQLITE_STATIC);
-
-    // Set expiration time to 10 minutes from now
-    std::time_t expirationTime = std::time(nullptr) + 600; // 600 seconds = 10 minutes
-    sqlite3_bind_int(stmt, 3, expirationTime);
-
-    // Execute statement
-    if (sqlite3_step(stmt) != SQLITE_DONE) {
-        std::cerr << "Failed to execute statement: " << sqlite3_errmsg(db) << std::endl;
-    }
-
-    // Clean up
-    sqlite3_finalize(stmt);
-   
-}
 
 std::string sendVerificationCodeToPhone(const std::string& phoneNumber) {
     std::string apiKey, GVCode;
@@ -929,127 +607,6 @@ try {
     return GVCode;
 }
 
- bool validateVerificationCode(const std::string& verificationCode, const std::string& GVCode) {
-    sqlite3* db;
-    sqlite3_stmt* stmt;
-
-
-    //std::string sql = "SELECT GVCode FROM verification_codes WHERE (email = ? OR phone_number = ?) AND expiration_time > ?;";
- std::string sql;
-    if (isEmail) {
-        sql = "SELECT expiration_time FROM verification_codes WHERE email = ? AND GVCode = ?";
-    } else {
-        sql = "SELECT expiration_time FROM verification_codes WHERE phone_number = ? AND GVCode = ?";
-    }
-
-
-
-
-    try {
-        if (sqlite3_open("C:/NEW/neurabyte.db", &db) != SQLITE_OK) {
-            std::cerr << "Failed to open database: " << sqlite3_errmsg(db) << std::endl;
-            return false;
-        }
-
-        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
-            std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
-            sqlite3_close(db);
-            return false;
-        }
-
-        if (sqlite3_bind_text(stmt, 1, verificationCode.c_str(), -1, SQLITE_STATIC) != SQLITE_OK) {
-            std::cerr << "Failed to bind parameter 1: " << sqlite3_errmsg(db) << std::endl;
-            sqlite3_finalize(stmt);
-            sqlite3_close(db);
-            return false;
-        }
-
-        if (sqlite3_bind_text(stmt, 2, verificationCode.c_str(), -1, SQLITE_STATIC) != SQLITE_OK) {
-            std::cerr << "Failed to bind parameter 2: " << sqlite3_errmsg(db) << std::endl;
-            sqlite3_finalize(stmt);
-            sqlite3_close(db);
-            return false;
-        }
-
-        std::time_t currentTime = std::time(nullptr);
-        if (sqlite3_bind_int(stmt, 3, static_cast<int>(currentTime)) != SQLITE_OK) {
-            std::cerr << "Failed to bind current time: " << sqlite3_errmsg(db) << std::endl;
-            sqlite3_finalize(stmt);
-            sqlite3_close(db);
-            return false;
-        }
-
-        bool isValid = false;
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            std::string storedCode(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
-            if (GVCode == storedCode) {
-                isValid = true;
-            }
-        }
-
-        sqlite3_finalize(stmt);
-       
-
-        return isValid;
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-        if (stmt) sqlite3_finalize(stmt);
-        if (db) sqlite3_close(db);
-        return false;
-    }
-}
-
-
-// Function to check if the verification code has expired
-bool checkCodeExpiration(const std::string& verificationCode) {
-    sqlite3* db ;
-    sqlite3_stmt* stmt = nullptr;
-    std::string sql = "SELECT expiration_time FROM verification_codes WHERE GVCode = ?;";
-
-    try {
-        // Open database
-        if (sqlite3_open("C:/NEW/neurabyte.db", &db) != SQLITE_OK) {
-            std::cerr << "Failed to open database: " << sqlite3_errmsg(db) << std::endl;
-            return false;
-        }
-
-        // Prepare SQL statement
-        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
-            std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
-            sqlite3_close(db);
-            return false;
-        }
-
-        // Set parameter
-        if (sqlite3_bind_text(stmt, 1, verificationCode.c_str(), -1, SQLITE_STATIC) != SQLITE_OK) {
-            std::cerr << "Failed to bind parameter: " << sqlite3_errmsg(db) << std::endl;
-            sqlite3_finalize(stmt);
-            sqlite3_close(db);
-            return false;
-        }
-
-        // Execute statement and check expiration
-        bool isExpired = false;
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            std::time_t expirationTime = sqlite3_column_int(stmt, 0);
-            if (std::time(nullptr) > expirationTime) {
-                isExpired = true;
-            }
-        }
-
-        // Clean up
-        sqlite3_finalize(stmt);
-       
-
-        return isExpired;
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-        if (stmt) sqlite3_finalize(stmt);
-        if (db) sqlite3_close(db);
-        return false;
-    }
-}
-
 
 
 void renderTextUnderlined(const char* text, int x, int y, SDL_Color color, TTF_Font* font, SDL_Renderer* renderer) {
@@ -1086,10 +643,261 @@ void renderTextUnderlined(const char* text, int x, int y, SDL_Color color, TTF_F
 
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+//firstly  i will get the PostgreSQL intiliaze it and then create a table that would be one in all 
+
+
+// Function to initialize the database and create tables
+bool initializeDatabase(const std::string& dbName) {
+
+
+
+void CreateUser(sqlite3* db, const std::string& username, const std::string& emailAddress, const std::string& password) {
+
+bool insertUser(sqlite3* db, const User& user) {
+
+void setCurrentUser(const std::string& emailAddress, const std::string& username, const std::string& hashedPassword) {
+
+
+bool validateLogin(const std::string& username, const std::string& password) {
+
+
+// Function to save agreements to the database
+void saveAgreementsToDatabase(sqlite3* db, const User& user, bool isCheckbox1Checked, bool isCheckbox2Checked, bool isCheckbox3Checked) {
 
 
 
 
+// Function to store the verification code and its expiration time in the SQLite database
+void storeEmailCodeInDatabase(const std::string& emailAddress, const std::string& GVCode) {
+
+
+
+
+void storePhoneCodeInDatabase(const std::string& phoneNumber, const std::string& GVCode) {
+
+
+ bool validateVerificationCode(const std::string& verificationCode, const std::string& GVCode) {
+
+// Function to check if the verification code has expired
+bool checkCodeExpiration(const std::string& verificationCode) {
+
+
+
+
+
+
+
+//inside teh signup screen 
+// Method to save user data to database
+ // Method to save user data to database
+void saveUserDataToDatabase(sqlite3* db) {
+    // Validate input
+    if (emailAddress.empty() || username.empty() || password.empty() || reconfirmedPassword.empty()) {
+
+
+
+
+
+
+    //inside the main fucntion
+    
+//intilaizing and opeening connecction ot sqlite database 
+*/
+
+
+PGconn *dbConn = nullptr;
+
+bool initializeDatabase(const std::string& dbName, const std::string& user, const std::string& password, const std::string& host, const std::string& port) {
+    std::string connStr = "dbname=" + dbName + " user=" + user + " password=" + password + " hostaddr=" + host + " port=" + port;
+    dbConn = PQconnectdb(connStr.c_str());
+
+    if (PQstatus(dbConn) != CONNECTION_OK) {
+        std::cerr << "Error opening PostgreSQL database: " << PQerrorMessage(dbConn) << std::endl;
+        return false;
+    }
+
+    const char* createTableSQL = R"(
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            email_address VARCHAR(255) NOT NULL UNIQUE,
+            username VARCHAR(255) NOT NULL,
+            password TEXT NOT NULL,
+            phone_number VARCHAR(50),
+            verification_code VARCHAR(50),
+            verification_expiration TIMESTAMP,
+            consent_forms BOOLEAN NOT NULL DEFAULT false,
+            license_agreements BOOLEAN NOT NULL DEFAULT false,
+            terms_of_service BOOLEAN NOT NULL DEFAULT false
+        );
+    )";
+
+    PGresult *res = PQexec(dbConn, createTableSQL);
+
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        std::cerr << "SQL error creating users table: " << PQerrorMessage(dbConn) << std::endl;
+        PQclear(res);
+        PQfinish(dbConn);
+        dbConn = nullptr;
+        return false;
+    }
+
+    PQclear(res);
+    return true;
+}
+bool insertUser(const User& user) {
+    const char* insertSQL = "INSERT INTO users (email_address, username, password) VALUES ($1, $2, $3)";
+    const char* paramValues[3] = {user.getEmailAddress().c_str(), user.getUsername().c_str(), user.getPassword().c_str()};
+    
+    PGresult *res = PQexecParams(dbConn, insertSQL, 3, nullptr, paramValues, nullptr, nullptr, 0);
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        std::cerr << "Failed to execute statement: " << PQerrorMessage(dbConn) << std::endl;
+        PQclear(res);
+        return false;
+    }
+
+    PQclear(res);
+    return true;
+}
+
+
+
+bool insertUser(PGconn* conn, const User& user) {
+    std::string query = "INSERT INTO Users (username, email, password) VALUES ($1, $2, $3)";
+    const char* paramValues[3] = { user.username.c_str(), user.emailAddress.c_str(), user.hashedPassword.c_str() };
+    PGresult* res = PQexecParams(conn, query.c_str(), 3, nullptr, paramValues, nullptr, nullptr, 0);
+    
+    bool success = (PQresultStatus(res) == PGRES_COMMAND_OK);
+    if (!success) {
+        std::cerr << "Insert user failed: " << PQerrorMessage(conn) << std::endl;
+    }
+    PQclear(res);
+    return success;
+}
+
+void setCurrentUser(const std::string& emailAddress, const std::string& username, const std::string& hashedPassword) {
+    // Assuming currentUser is a global or accessible variable
+    currentUser = std::make_unique<User>();
+    currentUser->emailAddress = emailAddress;
+    currentUser->username = username;
+    currentUser->hashedPassword = hashedPassword;
+}
+
+bool emailExists(const std::string& emailAddress) {
+    const char* sql = "SELECT COUNT(*) FROM users WHERE email_address = $1";
+    const char* paramValues[1] = {emailAddress.c_str()};
+    
+    PGresult *res = PQexecParams(dbConn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+        std::cerr << "Error executing query: " << PQerrorMessage(dbConn) << std::endl;
+        PQclear(res);
+        return true; // Assume email exists to prevent further errors
+    }
+
+    bool exists = false;
+    if (PQntuples(res) == 1 && std::stoi(PQgetvalue(res, 0, 0)) > 0) {
+        exists = true;
+    }
+
+    PQclear(res);
+    return exists;
+}
+void saveAgreementsToDatabase(const User& user, bool consentForms, bool licenseAgreements, bool termsOfService) {
+    const char* updateSQL = "UPDATE users SET consent_forms = $1, license_agreements = $2, terms_of_service = $3 WHERE email_address = $4";
+    const char* paramValues[4] = {consentForms ? "true" : "false", licenseAgreements ? "true" : "false", termsOfService ? "true" : "false", user.getEmailAddress().c_str()};
+
+    PGresult *res = PQexecParams(dbConn, updateSQL, 4, nullptr, paramValues, nullptr, nullptr, 0);
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        std::cerr << "Failed to update user agreements: " << PQerrorMessage(dbConn) << std::endl;
+    }
+
+    PQclear(res);
+}
+bool validateLogin(const std::string& username, const std::string& password) {
+    const char* sql = "SELECT username, password FROM users WHERE username = $1";
+    const char* paramValues[1] = {username.c_str()};
+
+    PGresult *res = PQexecParams(dbConn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+        std::cerr << "Failed to execute statement: " << PQerrorMessage(dbConn) << std::endl;
+        PQclear(res);
+        return false;
+    }
+
+    bool loginSuccess = false;
+    if (PQntuples(res) == 1) {
+        std::string dbPassword = PQgetvalue(res, 0, 1);
+        if (crypto_pwhash_str_verify(dbPassword.c_str(), password.c_str(), password.length()) == 0) {
+            loginSuccess = true;
+        }
+    }
+
+    PQclear(res);
+    return loginSuccess;
+}
+void storeEmailCodeInDatabase(const std::string& emailAddress, const std::string& GVCode) {
+    const char* updateSQL = "UPDATE users SET verification_code = $1, verification_expiration = $2 WHERE email_address = $3";
+    const char* paramValues[3];
+    paramValues[0] = GVCode.c_str();
+    
+    std::time_t expirationTime = std::time(nullptr) + 600; // 600 seconds = 10 minutes
+    std::string expirationTimeStr = std::to_string(expirationTime);
+    paramValues[1] = expirationTimeStr.c_str();
+    paramValues[2] = emailAddress.c_str();
+
+    PGresult *res = PQexecParams(dbConn, updateSQL, 3, nullptr, paramValues, nullptr, nullptr, 0);
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        std::cerr << "Failed to store verification code: " << PQerrorMessage(dbConn) << std::endl;
+    }
+
+    PQclear(res);
+}
+
+
+void storePhoneCodeInDatabase(PGconn* conn, const std::string& phoneNumber, const std::string& GVCode) {
+    time_t currentTime = std::time(nullptr);
+    std::string query = "INSERT INTO VerificationCodes (phoneNumber, GVCode, generationTime) VALUES ($1, $2, $3)";
+    const char* paramValues[3] = { phoneNumber.c_str(), GVCode.c_str(), std::to_string(currentTime).c_str() };
+    PGresult* res = PQexecParams(conn, query.c_str(), 3, nullptr, paramValues, nullptr, nullptr, 0);
+
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        std::cerr << "Store phone code failed: " << PQerrorMessage(conn) << std::endl;
+    }
+    PQclear(res);
+}
+
+bool checkCodeExpiration(PGconn* conn, const std::string& verificationCode) {
+    std::string query = "SELECT generationTime FROM VerificationCodes WHERE GVCode = $1";
+    const char* paramValues[1] = { verificationCode.c_str() };
+    PGresult* res = PQexecParams(conn, query.c_str(), 1, nullptr, paramValues, nullptr, nullptr, 0);
+    
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+        std::cerr << "Check code expiration failed: " << PQerrorMessage(conn) << std::endl;
+        PQclear(res);
+        return false;
+    }
+
+    if (PQntuples(res) == 0) {
+        std::cerr << "No record found for the verification code." << std::endl;
+        PQclear(res);
+        return false;
+    }
+
+    time_t generationTime = std::stol(PQgetvalue(res, 0, 0));
+    time_t currentTime = std::time(nullptr);
+    double difference = difftime(currentTime, generationTime);
+
+    PQclear(res);
+
+    // Assuming expiration time is 10 minutes
+    double expirationTime = 10 * 60;
+
+    return difference <= expirationTime;
+}
+
+//chnag eit becasue you should get the expirationitme fro the table becasue it was generated and sored already there i think so 
 
 
 
@@ -2024,34 +1832,7 @@ if (enteringemailAddress && !emailAddress.empty()) {
         // Implement cleanup logic 
     }
 
-// Method to save user data to database
- // Method to save user data to database
-void saveUserDataToDatabase(sqlite3* db) {
-    // Validate input
-    if (emailAddress.empty() || username.empty() || password.empty() || reconfirmedPassword.empty()) {
-        std::cerr << "Error: All fields are required." << std::endl;
-        return;
-    }
-    
-    // Check if passwords match
-    if (password != reconfirmedPassword) {
-        std::cerr << "Error: Passwords do not match." << std::endl;
-        return;
-    }
 
-    // Hash the password
-    std::string hashedPassword = hashPassword(password);
-
-    // Create User object
-    User newUser(emailAddress, username, hashedPassword);
-
-    // Save to database
-    if (insertUser(db, newUser)) {
-        std::cout << "User registered successfully." << std::endl;
-    } else {
-        std::cerr << "Error: Failed to register user." << std::endl;
-    }
-}
 };
 
 class NavigationMenu : public State {
@@ -3194,7 +2975,7 @@ public:
 };
 class ProfileUpdateScreenState : public NavigationMenu{
 private:
-sqlite3* db; 
+
     User* currentUser; // Pointer to the current user
 
 
@@ -3963,8 +3744,8 @@ const char* legalConsentText = "Legal and Consent";
  
 public:
     // constructor
-    ProfileUpdateScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* NunitoFont, TTF_Font* NimbusRomFont, User* user, sqlite3* db)
-        : NavigationMenu(window, renderer, NunitoFont), currentUser(user), db(db) 
+    ProfileUpdateScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* NunitoFont, TTF_Font* NimbusRomFont, User* user)
+        : NavigationMenu(window, renderer, NunitoFont), currentUser(user)
 
 , name(""), age(""), gender(""), bio(""), field_of_interest(""), date_of_birth(""), spoken_languages(""), hobbies
     (""), linkedin(""), twitter(""), facebook(""), instagram
@@ -6196,14 +5977,6 @@ if (IMG_Init(IMG_INIT_PNG) == 0) {
     return -1;
 }
 
-//intilaizing and opeening connecction ot sqlite database 
-sqlite3* db;
-int rc = sqlite3_open("C:/NEW/neurabyte.db", &db);
-
-if (rc != SQLITE_OK) {
-    std::cerr << "Error opening SQLite database: " << sqlite3_errmsg(db) << std::endl;
-    // Handle error as needed (e.g., exit application)
-}
 
 
 // intialize libsodium
@@ -6324,9 +6097,6 @@ changeState(SPLASH_SCREEN);
         SDL_RenderPresent(renderer);
     }
 
-    // Cleanup resources
-sqlite3_close(db);
-
     TTF_CloseFont(NunitoFont);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
@@ -6410,7 +6180,7 @@ and move on
 
 meanwhile agr koi marketing expert ya two factor authentication wala banda mil gya tu  pehla problem discuss kr lein gy 
 
- aur agr koi i dotn know backend yaend developer mil gya tu 
+ aur agr koi i dotn know backend ya front end end developer mil gya tu 
 
 
 
