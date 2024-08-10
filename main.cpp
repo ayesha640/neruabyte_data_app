@@ -27,7 +27,7 @@
 #include <algorithm> // Including  this header for std::max
 
 #include <iostream>
-#include <libpq-fe.h>//for database
+// #include <libpq-fe.h>//for database
 
 
 
@@ -87,9 +87,10 @@ enum AppState {
     S_VERIFICATION_SCREEN,
     PASSWORD_RESET_SCREEN,
     HELP_SCREEN,
-    PROFILE_SCREEN,
+  
     F_VERIFICATION_SCREEN,
     PROFILE_UPDATE_SCREEN,
+      PROFILE_SCREEN,
     SETTINGS_SCREEN,
     COGNITIVE_STATS_SCREEN,
     DATA_STATS_SCREEN,
@@ -110,9 +111,9 @@ const char* screenNames[] = {
     "S Verification Screen",
     "Password Reset  Screen",
     "Help Screen",
-    "Profile Screen",
     "F Verification Screen",
 "Profile Update Screen State",
+ "Profile Screen",
 "Settings Screen",
 "Cognitive Stats Scren",
 "Data Stats Screen",
@@ -226,7 +227,7 @@ void DrawCircle(SDL_Renderer* renderer, int centerX, int centerY, int circleradi
 
 
 class User {
-private:
+protected:
     std::string emailAddress;
     std::string username;
     std::string hashedPassword;
@@ -269,7 +270,14 @@ void renderText(const std::string& message, int x, int y, SDL_Color color, TTF_F
     SDL_DestroyTexture(texture);
 }
 
-// Global variables
+// Globals
+
+
+// Function to detect if the input is an email
+bool isEmail(const std::string& input) {
+    const std::regex pattern("[\\w.%+-]+@[\\w.-]+\\.[a-zA-Z]{2,}");
+    return std::regex_match(input, pattern);
+}
 
 std::string apiKey;  // Store the API key
 
@@ -314,6 +322,342 @@ std::string generateVerificationCode() {
     return code;
 }
 
+
+// PGconn *dbConn = nullptr;
+
+// bool initializeDatabase(const std::string& dbName, const std::string& user, const std::string& password, const std::string& host, const std::string& port) {
+//     std::string connStr = "dbname=" + dbName + " user=" + user + " password=" + password + " hostaddr=" + host + " port=" + port;
+//     dbConn = PQconnectdb(connStr.c_str());
+
+//     if (PQstatus(dbConn) != CONNECTION_OK) {
+//         std::cerr << "Error opening PostgreSQL database: " << PQerrorMessage(dbConn) << std::endl;
+//         return false;
+//     }
+
+//     const char* createTableSQL = R"(
+//         CREATE TABLE IF NOT EXISTS users (
+//             id SERIAL PRIMARY KEY,
+//             email_address VARCHAR(255) NOT NULL UNIQUE,
+//             username VARCHAR(255) NOT NULL,
+//             password TEXT NOT NULL,
+//             phone_number VARCHAR(50),
+//             verification_code VARCHAR(50),
+//             verification_expiration TIMESTAMP,
+//             consent_forms BOOLEAN NOT NULL DEFAULT false,
+//             license_agreements BOOLEAN NOT NULL DEFAULT false,
+//             terms_of_service BOOLEAN NOT NULL DEFAULT false
+//         );
+//     )";
+
+//     PGresult *res = PQexec(dbConn, createTableSQL);
+
+//     if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+//         std::cerr << "SQL error creating users table: " << PQerrorMessage(dbConn) << std::endl;
+//         PQclear(res);
+//         PQfinish(dbConn);
+//         dbConn = nullptr;
+//         return false;
+//     }
+
+//     PQclear(res);
+//     return true;
+// }
+// bool insertUser(PGconn *dbConn, const User &user);
+// void setCurrentUser(const std::string &emailAddress, const std::string &username, const std::string &hashedPassword);
+// bool emailExists(const std::string &emailAddress);
+
+
+
+
+// void CreateUser(PGconn* dbConn, const std::string& username, const std::string& emailAddress, const std::string& password) {
+//     // Validate user data
+//     if (username.empty() || emailAddress.empty() || password.empty()) {
+//         std::cerr << "Error: All fields are required." << std::endl;
+//         return;
+//     }
+
+//     // Check if the email address already exists
+//     if (emailExists(emailAddress)) {
+//         std::cerr << "Error: Email address already exists." << std::endl;
+//         return;
+//     }
+
+//     // Hash the user's password
+//     std::string hashedPassword = hashPassword(password);
+
+//     // Create a User object
+//     User newUser(emailAddress, username, hashedPassword);
+
+//     // Save the new user to the database
+//     if (!insertUser(dbConn, newUser)) {
+//         std::cerr << "Error: Failed to save user to database." << std::endl;
+//     } else {
+//         std::cout << "User created successfully." << std::endl;
+//         // Set the current user
+//        setCurrentUser(newUser.getEmailAddress(), newUser.getUsername(), newUser.getHashedPassword());
+
+//     }
+// }
+
+
+
+
+
+
+// bool insertUser(PGconn* dbConn, const User& user) {
+//     const char* insertSQL = "INSERT INTO users (email_address, username, password) VALUES ($1, $2, $3)";
+//     const char* paramValues[3] = {user.getEmailAddress().c_str(), user.getUsername().c_str(), user. getHashedPassword().c_str()};
+    
+//     PGresult *res = PQexecParams(dbConn, insertSQL, 3, nullptr, paramValues, nullptr, nullptr, 0);
+//     if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+//         std::cerr << "Failed to execute statement: " << PQerrorMessage(dbConn) << std::endl;
+//         PQclear(res);
+//         return false;
+//     }
+
+//     PQclear(res);
+//     return true;
+// }
+
+
+// void setCurrentUser(const std::string& emailAddress, const std::string& username, const std::string& hashedPassword) {
+//     if (currentUser) {
+//         currentUser->setEmailAddress(emailAddress);
+//         currentUser->setUsername(username);
+//         currentUser->setHashedPassword(hashedPassword);
+//     } else {
+//         // Handle the case where currentUser is not initialized
+//         currentUser = std::make_unique<User>(emailAddress, username, hashedPassword);
+//     }
+// }
+
+
+// bool emailExists(const std::string& emailAddress) {
+
+
+//      if (dbConn== nullptr) {
+//         std::cerr << "Database connection is null." << std::endl;
+//         return true; // Assume email exists to prevent further errors
+//     }
+//     const char* sql = "SELECT COUNT(*) FROM users WHERE email_address = $1";
+//     const char* paramValues[1] = {emailAddress.c_str()};
+    
+//     PGresult *res = PQexecParams(dbConn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
+//     if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+//         std::cerr << "Error executing query: " << PQerrorMessage(dbConn) << std::endl;
+//         PQclear(res);
+//         return true; // Assume email exists to prevent further errors
+//     }
+
+//     bool exists = false;
+//     if (PQntuples(res) == 1 && std::stoi(PQgetvalue(res, 0, 0)) > 0) {
+//         exists = true;
+//     }
+
+//     PQclear(res);
+//     return exists;
+// }
+
+
+
+// // Function to save agreements to the database (PostgreSQL version)
+// void saveAgreementsToDatabase(PGconn* dbConn, const User& user, bool isCheckbox1Checked, bool isCheckbox2Checked, bool isCheckbox3Checked) {
+//     if (dbConn == nullptr) {
+//         std::cerr << "Database connection is null." << std::endl;
+//         return;
+//     }
+
+//     const char* updateSQL = "UPDATE users SET consent_forms = $1, license_agreements = $2, terms_of_service = $3 WHERE email_address = $4";
+//     const char* paramValues[4] = {
+//         isCheckbox1Checked ? "true" : "false",
+//         isCheckbox2Checked ? "true" : "false",
+//         isCheckbox3Checked ? "true" : "false",
+//         user.getEmailAddress().c_str()
+//     };
+
+//     PGresult *res = PQexecParams(dbConn, updateSQL, 4, nullptr, paramValues, nullptr, nullptr, 0);
+//     if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+//         std::cerr << "Failed to update user agreements: " << PQerrorMessage(dbConn) << std::endl;
+//     }
+
+//     PQclear(res);
+// }
+
+// bool validateLogin(const std::string& username, const std::string& password) {
+// if (PQstatus(dbConn) != CONNECTION_OK) {
+//         std::cerr << "Database connection is not open: " << PQerrorMessage(dbConn) << std::endl;
+//         return false;
+//     }
+
+
+
+//     const char* sql = "SELECT username, password FROM users WHERE username = $1";
+//     const char* paramValues[1] = {username.c_str()};
+
+//     PGresult *res = PQexecParams(dbConn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
+//     if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+//         std::cerr << "Failed to execute statement: " << PQerrorMessage(dbConn) << std::endl;
+//         PQclear(res);
+//         return false;
+//     }
+
+//     bool loginSuccess = false;
+//     if (PQntuples(res) == 1) {
+//         std::string dbPassword = PQgetvalue(res, 0, 1);
+//         if (crypto_pwhash_str_verify(dbPassword.c_str(), password.c_str(), password.length()) == 0) {
+//             loginSuccess = true;
+//         }
+//     } else {
+//         std::cerr << "No matching user found." << std::endl;
+//     }
+
+//     PQclear(res);
+//     return loginSuccess;
+// }
+
+
+
+
+
+// bool checkCodeExpiration(PGconn* dbConn, const std::string& verificationCode) {
+//     if (dbConn == nullptr) {
+//         std::cerr << "Database connection is null." << std::endl;
+//         return false;
+//     }
+
+//     // Define the query to select the verification expiration time for a given verification code
+//     std::string query = "SELECT verification_expiration FROM users WHERE verification_code = $1";
+//     const char* paramValues[1] = { verificationCode.c_str() };
+
+//     // Execute the query with the provided verification code
+//     PGresult* res = PQexecParams(dbConn, query.c_str(), 1, nullptr, paramValues, nullptr, nullptr, 0);
+
+//     // Check the result status
+//     if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+//         std::cerr << "Check code expiration failed: " << PQerrorMessage(dbConn) << std::endl;
+//         PQclear(res);
+//         return false;
+//     }
+
+//     // Check if the query returned a row
+//     if (PQntuples(res) == 0) {
+//         std::cerr << "No record found for the verification code." << std::endl;
+//         PQclear(res);
+//         return false;
+//     }
+
+//     // Get the expiration time from the query result
+//     const char* expirationStr = PQgetvalue(res, 0, 0);
+//     if (expirationStr == nullptr) {
+//         std::cerr << "Error retrieving expiration time." << std::endl;
+//         PQclear(res);
+//         return false;
+//     }
+
+//     // Convert the expiration time to time_t
+//     std::time_t expirationTime = static_cast<std::time_t>(std::stoll(expirationStr));
+//     std::time_t currentTime = std::time(nullptr);
+
+//     // Check if the current time is before the expiration time
+//     bool isValid = currentTime <= expirationTime;
+
+//     PQclear(res);
+//     return isValid;
+// }
+
+
+
+
+
+
+// // Function to store email code in the database
+// void storeEmailCodeInDatabase(PGconn* dbConn, const std::string& emailAddress, const std::string& GVCode) {
+//     if (dbConn == nullptr) {
+//         std::cerr << "Database connection is null." << std::endl;
+//         return;
+//     }
+
+//     std::time_t expirationTime = std::time(nullptr) + 600; // 600 seconds = 10 minutes
+//     const char* updateSQL = "UPDATE users SET verification_code = $1, verification_expiration = $2 WHERE email_address = $3";
+//     const char* paramValues[3] = { 
+//         GVCode.c_str(), 
+//         std::to_string(expirationTime).c_str(), 
+//         emailAddress.c_str() 
+//     };
+
+//     PGresult* res = PQexecParams(dbConn, updateSQL, 3, nullptr, paramValues, nullptr, nullptr, 0);
+//     if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+//         std::cerr << "Failed to store verification code: " << PQerrorMessage(dbConn) << std::endl;
+//     }
+
+//     PQclear(res);
+// }
+
+// // Function to store phone code in the database
+// void storePhoneCodeInDatabase(PGconn* dbConn, const std::string& phoneNumber, const std::string& GVCode) {
+//     if (dbConn == nullptr) {
+//         std::cerr << "Database connection is null." << std::endl;
+//         return;
+//     }
+
+//     time_t expirationTime = std::time(nullptr) + 600; // 600 seconds = 10 minutes
+//     const char* insertSQL = "INSERT INTO VerificationCodes (phone_number, code, expiration_time) VALUES ($1, $2, $3)";
+//     const char* paramValues[3] = { 
+//         phoneNumber.c_str(), 
+//         GVCode.c_str(), 
+//         std::to_string(expirationTime).c_str() 
+//     };
+
+//     PGresult* res = PQexecParams(dbConn, insertSQL, 3, nullptr, paramValues, nullptr, nullptr, 0);
+//     if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+//         std::cerr << "Failed to store phone code: " << PQerrorMessage(dbConn) << std::endl;
+//     }
+
+//     PQclear(res);
+// }
+
+
+
+
+
+
+// //validatae verifcation code
+
+// bool validateVerificationCode(PGconn* dbConn, const std::string& identifier, const std::string& GVCode, bool isEmail) {
+//     if (dbConn == nullptr) {
+//         std::cerr << "Database connection is null." << std::endl;
+//         return false;
+//     }
+
+//     // Determine the column to use for the identifier (email or phone_number)
+//     std::string column = isEmail ? "email_address" : "phone_number";
+//     std::string query = "SELECT verification_expiration FROM users WHERE " + column + " = $1 AND verification_code = $2";
+//     const char* paramValues[2] = { identifier.c_str(), GVCode.c_str() };
+
+//     PGresult* res = PQexecParams(dbConn, query.c_str(), 2, nullptr, paramValues, nullptr, nullptr, 0);
+
+//     if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+//         std::cerr << "Failed to execute statement: " << PQerrorMessage(dbConn) << std::endl;
+//         PQclear(res);
+//         return false;
+//     }
+
+//     bool isValid = false;
+//     if (PQntuples(res) == 1) {
+//         std::time_t currentTime = std::time(nullptr);
+//         std::time_t expirationTime = PQgetvalue(res, 0, 0) != nullptr ? static_cast<std::time_t>(std::stoll(PQgetvalue(res, 0, 0))) : 0;
+
+//         if (currentTime < expirationTime) {
+//             isValid = true;
+//         }
+//     }
+
+//     PQclear(res);
+//     return isValid;
+// }
+
+
+
 std::string sendVerificationCodeToEmail(const std::string& emailAddress) {
     std::string apiKey;
     std::string GVCode;
@@ -339,12 +683,12 @@ std::string sendVerificationCodeToEmail(const std::string& emailAddress) {
         return "";
     }
 
-    try {
-        storeEmailCodeInDatabase(emailAddress, GVCode); // Store the email and code in your database
-    } catch (const std::exception& e) {
-        std::cerr << "Failed to store email code in database: " << e.what() << std::endl;
-        return "";
-    }
+    // try {
+    //     storeEmailCodeInDatabase(dbConn,emailAddress, GVCode); // Store the email and code in your database
+    // } catch (const std::exception& e) {
+    //     std::cerr << "Failed to store email code in database: " << e.what() << std::endl;
+    //     return "";
+    // }
 
     std::string emailContent = "Your verification code is: " + GVCode;
  std::cout << "your email content is  " << emailContent<< std::endl;
@@ -498,12 +842,12 @@ std::string sendVerificationCodeToPhone(const std::string& phoneNumber) {
         return "";
     }
 
-    try {
-        storePhoneCodeInDatabase(phoneNumber, GVCode);
-    } catch (const std::exception& e) {
-        std::cerr << "Failed to store phone code in database: " << e.what() << std::endl;
-        return "";
-    }
+    // try {
+    //     storePhoneCodeInDatabase(dbConn,phoneNumber, GVCode);
+    // } catch (const std::exception& e) {
+    //     std::cerr << "Failed to store phone code in database: " << e.what() << std::endl;
+    //     return "";
+    // }
 
     std::string smsContent = "Your verification code is: " + GVCode;
 
@@ -640,272 +984,6 @@ void renderTextUnderlined(const char* text, int x, int y, SDL_Color color, TTF_F
     // Reset the font style to normal (remove underline)
     TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
 }
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/*
-//firstly  i will get the PostgreSQL intiliaze it and then create a table that would be one in all 
-
-
-// Function to initialize the database and create tables
-bool initializeDatabase(const std::string& dbName) {
-
-
-
-void CreateUser(sqlite3* db, const std::string& username, const std::string& emailAddress, const std::string& password) {
-
-bool insertUser(sqlite3* db, const User& user) {
-
-void setCurrentUser(const std::string& emailAddress, const std::string& username, const std::string& hashedPassword) {
-
-
-bool validateLogin(const std::string& username, const std::string& password) {
-
-
-// Function to save agreements to the database
-void saveAgreementsToDatabase(sqlite3* db, const User& user, bool isCheckbox1Checked, bool isCheckbox2Checked, bool isCheckbox3Checked) {
-
-
-
-
-// Function to store the verification code and its expiration time in the SQLite database
-void storeEmailCodeInDatabase(const std::string& emailAddress, const std::string& GVCode) {
-
-
-
-
-void storePhoneCodeInDatabase(const std::string& phoneNumber, const std::string& GVCode) {
-
-
- bool validateVerificationCode(const std::string& verificationCode, const std::string& GVCode) {
-
-// Function to check if the verification code has expired
-bool checkCodeExpiration(const std::string& verificationCode) {
-
-
-
-
-
-
-
-//inside teh signup screen 
-// Method to save user data to database
- // Method to save user data to database
-void saveUserDataToDatabase(sqlite3* db) {
-    // Validate input
-    if (emailAddress.empty() || username.empty() || password.empty() || reconfirmedPassword.empty()) {
-
-
-
-
-
-
-    //inside the main fucntion
-    
-//intilaizing and opeening connecction ot sqlite database 
-*/
-
-
-PGconn *dbConn = nullptr;
-
-bool initializeDatabase(const std::string& dbName, const std::string& user, const std::string& password, const std::string& host, const std::string& port) {
-    std::string connStr = "dbname=" + dbName + " user=" + user + " password=" + password + " hostaddr=" + host + " port=" + port;
-    dbConn = PQconnectdb(connStr.c_str());
-
-    if (PQstatus(dbConn) != CONNECTION_OK) {
-        std::cerr << "Error opening PostgreSQL database: " << PQerrorMessage(dbConn) << std::endl;
-        return false;
-    }
-
-    const char* createTableSQL = R"(
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            email_address VARCHAR(255) NOT NULL UNIQUE,
-            username VARCHAR(255) NOT NULL,
-            password TEXT NOT NULL,
-            phone_number VARCHAR(50),
-            verification_code VARCHAR(50),
-            verification_expiration TIMESTAMP,
-            consent_forms BOOLEAN NOT NULL DEFAULT false,
-            license_agreements BOOLEAN NOT NULL DEFAULT false,
-            terms_of_service BOOLEAN NOT NULL DEFAULT false
-        );
-    )";
-
-    PGresult *res = PQexec(dbConn, createTableSQL);
-
-    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-        std::cerr << "SQL error creating users table: " << PQerrorMessage(dbConn) << std::endl;
-        PQclear(res);
-        PQfinish(dbConn);
-        dbConn = nullptr;
-        return false;
-    }
-
-    PQclear(res);
-    return true;
-}
-bool insertUser(const User& user) {
-    const char* insertSQL = "INSERT INTO users (email_address, username, password) VALUES ($1, $2, $3)";
-    const char* paramValues[3] = {user.getEmailAddress().c_str(), user.getUsername().c_str(), user.getPassword().c_str()};
-    
-    PGresult *res = PQexecParams(dbConn, insertSQL, 3, nullptr, paramValues, nullptr, nullptr, 0);
-    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-        std::cerr << "Failed to execute statement: " << PQerrorMessage(dbConn) << std::endl;
-        PQclear(res);
-        return false;
-    }
-
-    PQclear(res);
-    return true;
-}
-
-
-
-bool insertUser(PGconn* conn, const User& user) {
-    std::string query = "INSERT INTO Users (username, email, password) VALUES ($1, $2, $3)";
-    const char* paramValues[3] = { user.username.c_str(), user.emailAddress.c_str(), user.hashedPassword.c_str() };
-    PGresult* res = PQexecParams(conn, query.c_str(), 3, nullptr, paramValues, nullptr, nullptr, 0);
-    
-    bool success = (PQresultStatus(res) == PGRES_COMMAND_OK);
-    if (!success) {
-        std::cerr << "Insert user failed: " << PQerrorMessage(conn) << std::endl;
-    }
-    PQclear(res);
-    return success;
-}
-
-void setCurrentUser(const std::string& emailAddress, const std::string& username, const std::string& hashedPassword) {
-    // Assuming currentUser is a global or accessible variable
-    currentUser = std::make_unique<User>();
-    currentUser->emailAddress = emailAddress;
-    currentUser->username = username;
-    currentUser->hashedPassword = hashedPassword;
-}
-
-bool emailExists(const std::string& emailAddress) {
-    const char* sql = "SELECT COUNT(*) FROM users WHERE email_address = $1";
-    const char* paramValues[1] = {emailAddress.c_str()};
-    
-    PGresult *res = PQexecParams(dbConn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
-    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
-        std::cerr << "Error executing query: " << PQerrorMessage(dbConn) << std::endl;
-        PQclear(res);
-        return true; // Assume email exists to prevent further errors
-    }
-
-    bool exists = false;
-    if (PQntuples(res) == 1 && std::stoi(PQgetvalue(res, 0, 0)) > 0) {
-        exists = true;
-    }
-
-    PQclear(res);
-    return exists;
-}
-void saveAgreementsToDatabase(const User& user, bool consentForms, bool licenseAgreements, bool termsOfService) {
-    const char* updateSQL = "UPDATE users SET consent_forms = $1, license_agreements = $2, terms_of_service = $3 WHERE email_address = $4";
-    const char* paramValues[4] = {consentForms ? "true" : "false", licenseAgreements ? "true" : "false", termsOfService ? "true" : "false", user.getEmailAddress().c_str()};
-
-    PGresult *res = PQexecParams(dbConn, updateSQL, 4, nullptr, paramValues, nullptr, nullptr, 0);
-    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-        std::cerr << "Failed to update user agreements: " << PQerrorMessage(dbConn) << std::endl;
-    }
-
-    PQclear(res);
-}
-bool validateLogin(const std::string& username, const std::string& password) {
-    const char* sql = "SELECT username, password FROM users WHERE username = $1";
-    const char* paramValues[1] = {username.c_str()};
-
-    PGresult *res = PQexecParams(dbConn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
-    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
-        std::cerr << "Failed to execute statement: " << PQerrorMessage(dbConn) << std::endl;
-        PQclear(res);
-        return false;
-    }
-
-    bool loginSuccess = false;
-    if (PQntuples(res) == 1) {
-        std::string dbPassword = PQgetvalue(res, 0, 1);
-        if (crypto_pwhash_str_verify(dbPassword.c_str(), password.c_str(), password.length()) == 0) {
-            loginSuccess = true;
-        }
-    }
-
-    PQclear(res);
-    return loginSuccess;
-}
-void storeEmailCodeInDatabase(const std::string& emailAddress, const std::string& GVCode) {
-    const char* updateSQL = "UPDATE users SET verification_code = $1, verification_expiration = $2 WHERE email_address = $3";
-    const char* paramValues[3];
-    paramValues[0] = GVCode.c_str();
-    
-    std::time_t expirationTime = std::time(nullptr) + 600; // 600 seconds = 10 minutes
-    std::string expirationTimeStr = std::to_string(expirationTime);
-    paramValues[1] = expirationTimeStr.c_str();
-    paramValues[2] = emailAddress.c_str();
-
-    PGresult *res = PQexecParams(dbConn, updateSQL, 3, nullptr, paramValues, nullptr, nullptr, 0);
-    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-        std::cerr << "Failed to store verification code: " << PQerrorMessage(dbConn) << std::endl;
-    }
-
-    PQclear(res);
-}
-
-
-void storePhoneCodeInDatabase(PGconn* conn, const std::string& phoneNumber, const std::string& GVCode) {
-    time_t currentTime = std::time(nullptr);
-    std::string query = "INSERT INTO VerificationCodes (phoneNumber, GVCode, generationTime) VALUES ($1, $2, $3)";
-    const char* paramValues[3] = { phoneNumber.c_str(), GVCode.c_str(), std::to_string(currentTime).c_str() };
-    PGresult* res = PQexecParams(conn, query.c_str(), 3, nullptr, paramValues, nullptr, nullptr, 0);
-
-    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-        std::cerr << "Store phone code failed: " << PQerrorMessage(conn) << std::endl;
-    }
-    PQclear(res);
-}
-
-bool checkCodeExpiration(PGconn* conn, const std::string& verificationCode) {
-    std::string query = "SELECT generationTime FROM VerificationCodes WHERE GVCode = $1";
-    const char* paramValues[1] = { verificationCode.c_str() };
-    PGresult* res = PQexecParams(conn, query.c_str(), 1, nullptr, paramValues, nullptr, nullptr, 0);
-    
-    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
-        std::cerr << "Check code expiration failed: " << PQerrorMessage(conn) << std::endl;
-        PQclear(res);
-        return false;
-    }
-
-    if (PQntuples(res) == 0) {
-        std::cerr << "No record found for the verification code." << std::endl;
-        PQclear(res);
-        return false;
-    }
-
-    time_t generationTime = std::stol(PQgetvalue(res, 0, 0));
-    time_t currentTime = std::time(nullptr);
-    double difference = difftime(currentTime, generationTime);
-
-    PQclear(res);
-
-    // Assuming expiration time is 10 minutes
-    double expirationTime = 10 * 60;
-
-    return difference <= expirationTime;
-}
-
-//chnag eit becasue you should get the expirationitme fro the table becasue it was generated and sored already there i think so 
-
-
-
-
-
-
-
-
 
 // Abstract class State
 class State {
@@ -1080,24 +1158,24 @@ void handleEvents(SDL_Event& event) override {
                 }
                 break;
 
-case SDLK_RETURN:
-     if (enteringUsername && !username.empty()) {
-        enteringUsername = false;
-        enteringpassword = true;
-    } else if (enteringpassword && !username.empty() && !password.empty()) {
-                        if (validateLogin(username, password)) {
-                            loginMessage = "Login successful!";
-                            loginMessageColor = darkgreen;
-                            loginMessageTime = SDL_GetTicks();
-                            loginSuccess = true;
-                        } else {
-                            loginMessage = "Login failed. Invalid username or password.";
-                            loginMessageColor = maroon;
-                             loginMessageTime = SDL_GetTicks();
-                        loginSuccess = false; // Login failed
-                        }
-                    }
-                break;
+// case SDLK_RETURN:
+//      if (enteringUsername && !username.empty()) {
+//         enteringUsername = false;
+//         enteringpassword = true;
+//     } else if (enteringpassword && !username.empty() && !password.empty()) {
+//                         if (validateLogin(username, password)) {
+//                             loginMessage = "Login successful!";
+//                             loginMessageColor = darkgreen;
+//                             loginMessageTime = SDL_GetTicks();
+//                             loginSuccess = true;
+//                         } else {
+//                             loginMessage = "Login failed. Invalid username or password.";
+//                             loginMessageColor = maroon;
+//                              loginMessageTime = SDL_GetTicks();
+//                         loginSuccess = false; // Login failed
+//                         }
+//                     }
+//                 break;
              case SDLK_DOWN:
                 if (enteringUsername) {
                     enteringUsername = false;
@@ -1143,18 +1221,18 @@ case SDLK_RETURN:
         
          else if (mouseX >= textX5 && mouseX <= textX5 + textWidth5 && mouseY >= textY5 && mouseY <= textY5 + textHeight5) {
             std::cout << "Login button clicked" << std::endl;
-    if (validateLogin(username, password)) {
-                            loginMessage = "Login successful!";
-                            loginMessageColor = darkgreen;
-                            loginMessageTime = SDL_GetTicks();
-                            loginSuccess = true;
-                        } else {
-                            loginMessage = "Login failed. Invalid username or password.";
-                            loginMessageColor = maroon;
-                             loginMessageTime = SDL_GetTicks();
-                        loginSuccess = false; // Login failed
-                        }
-
+    // if (validateLogin(username, password)) {
+    //                         loginMessage = "Login successful!";
+    //                         loginMessageColor = darkgreen;
+    //                         loginMessageTime = SDL_GetTicks();
+    //                         loginSuccess = true;
+    //                     } else {
+    //                         loginMessage = "Login failed. Invalid username or password.";
+    //                         loginMessageColor = maroon;
+    //                          loginMessageTime = SDL_GetTicks();
+    //                     loginSuccess = false; // Login failed
+    //                     }
+                            changeState (MAIN_DASHBOARD); 
                         
 
 
@@ -1517,7 +1595,20 @@ case SDLK_RETURN:
         enteringreconfirmedPassword = true;
     } else if (enteringreconfirmedPassword && !reconfirmedPassword.empty()) {
         enteringreconfirmedPassword = false;
-        saveUserDataToDatabase(db); 
+          // Check if the input fields are not empty
+    if (emailAddress.empty() || username.empty() || password.empty() || reconfirmedPassword.empty()) {
+        std::cerr << "Error: All fields are required." << std::endl;
+        return;
+    }
+
+    // Check if passwords match
+    if (password != reconfirmedPassword) {
+        std::cerr << "Error: Passwords do not match." << std::endl;
+        return;
+    }
+
+    // // Call the function to save user data to the database
+    // saveUserDataToDatabase(dbConn, emailAddress, username, password, reconfirmedPassword);
 
 
         changeState(F_VERIFICATION_SCREEN);
@@ -1593,7 +1684,20 @@ case SDLK_UP:
             changeState(LOGIN_SCREEN);
         } else if (mouseX >= textX7 && mouseX <= textX7 + textWidth7 && mouseY >= textY7 && mouseY <= textY7 + textHeight7) {
             std::cout << "Sign up button clicked" << std::endl;
-              saveUserDataToDatabase( db); 
+               // Check if the input fields are not empty
+    if (emailAddress.empty() || username.empty() || password.empty() || reconfirmedPassword.empty()) {
+        std::cerr << "Error: All fields are required." << std::endl;
+        return;
+    }
+
+    // Check if passwords match
+    if (password != reconfirmedPassword) {
+        std::cerr << "Error: Passwords do not match." << std::endl;
+        return;
+    }
+
+    // // Call the function to save user data to the database
+    // saveUserDataToDatabase(dbConn, emailAddress, username, password, reconfirmedPassword);
             changeState(F_VERIFICATION_SCREEN);
         }
     }
@@ -1831,6 +1935,41 @@ if (enteringemailAddress && !emailAddress.empty()) {
     void cleanup() override {
         // Implement cleanup logic 
     }
+
+
+// void saveUserDataToDatabase(PGconn* dbConn, const std::string& emailAddress, const std::string& username, const std::string& password, const std::string& reconfirmedPassword) {
+//     // Validate input
+//     if (emailAddress.empty() || username.empty() || password.empty() || reconfirmedPassword.empty()) {
+//         std::cerr << "Error: All fields are required." << std::endl;
+//         return;
+//     }
+    
+//     // Check if passwords match
+//     if (password != reconfirmedPassword) {
+//         std::cerr << "Error: Passwords do not match." << std::endl;
+//         return;
+//     }
+
+//     // Hash the password
+//     std::string hashedPassword = hashPassword(password);
+
+//     // Create User object
+//     User newUser(emailAddress, username, hashedPassword);
+
+//     // Save to database
+//     if (insertUser(dbConn, newUser)) {
+//         std::cout << "User registered successfully." << std::endl;
+//     } else {
+//         std::cerr << "Error: Failed to register user." << std::endl;
+//     }
+// }
+
+
+
+
+
+
+
 
 
 };
@@ -2432,33 +2571,34 @@ public:
         SDL_StartTextInput();
         // Initialize other necessary variables if needed
     }
-virtual std::string getVerificationSuccessMessage() const = 0;
- virtual void updateVerificationMessage() {
-    bool codeIsValid = validateVerificationCode(verificationCode, GVCode);
-    bool codeIsExpired = checkCodeExpiration(verificationCode);
+// virtual std::string getVerificationSuccessMessage() const = 0;
+//  virtual void updateVerificationMessage() {
+//     // bool codeIsValid = validateVerificationCode(dbConn, verificationCode, GVCode, true);
+//     // bool codeIsExpired = checkCodeExpiration (dbConn,verificationCode);
+//  bool codeIsValid = validateVerificationCode( verificationCode, GVCode, true);
+//     bool codeIsExpired = checkCodeExpiration (verificationCode);
+//     renderExpireMessage = false;
+//     renderIncorrectMessage = false;
+//     renderSuccessMessage = false;
 
-    renderExpireMessage = false;
-    renderIncorrectMessage = false;
-    renderSuccessMessage = false;
-
-    if (codeIsExpired) {
-        VerificationMessageColor = {128, 0, 0, 255};  // maroon
-        VerificationMessageTime = SDL_GetTicks();
-        VerificationSuccess = false;
-        renderExpireMessage = true;
-    } else if (!codeIsValid) {
-        VerificationMessageColor = {128, 0, 0, 255};  // maroon
-        VerificationMessageTime = SDL_GetTicks();
-        VerificationSuccess = false;
-        renderIncorrectMessage = true;
-    } else {
-        VerificationMessageColor = {0, 100, 0, 255};  // dark green
-        VerificationMessageTime = SDL_GetTicks();
-        VerificationSuccess = true;
-        renderSuccessMessage = true;
-        changeState(LOGIN_SCREEN);
-    }
-}
+//     if (codeIsExpired) {
+//         VerificationMessageColor = {128, 0, 0, 255};  // maroon
+//         VerificationMessageTime = SDL_GetTicks();
+//         VerificationSuccess = false;
+//         renderExpireMessage = true;
+//     } else if (!codeIsValid) {
+//         VerificationMessageColor = {128, 0, 0, 255};  // maroon
+//         VerificationMessageTime = SDL_GetTicks();
+//         VerificationSuccess = false;
+//         renderIncorrectMessage = true;
+//     } else {
+//         VerificationMessageColor = {0, 100, 0, 255};  // dark green
+//         VerificationMessageTime = SDL_GetTicks();
+//         VerificationSuccess = true;
+//         renderSuccessMessage = true;
+//         changeState(LOGIN_SCREEN);
+//     }
+//}
   virtual void handleEvents(SDL_Event& event)  {
     // Handle text input for email/phone and verification code
     if (event.type == SDL_TEXTINPUT) {
@@ -2512,7 +2652,7 @@ else if (event.type == SDL_KEYDOWN) {
 
                 
        
-                updateVerificationMessage(); // Update the verification message based on the code validation
+                //updateVerificationMessage(); // Update the verification message based on the code validation
             }
        else if (event.key.keysym.sym == SDLK_DOWN) {
         if (enteringEmail) {
@@ -2588,7 +2728,7 @@ else if (event.type == SDL_KEYDOWN) {
 if (mouseX >= VerifyX && mouseX <= VerifyX + VerifyWidth && mouseY >= VerifyY && mouseY <= VerifyY + VerifyHeight) {
     std::cout << "Verify button clicked" << std::endl;
 
-     updateVerificationMessage();
+    // updateVerificationMessage();
   
 
 }}
@@ -2771,9 +2911,9 @@ public:
  FVerificationScreenState (SDL_Window* window, SDL_Renderer* renderer, TTF_Font* NunitoFont)
     : Verification (window ,renderer, NunitoFont ) 
     {}
- std::string getVerificationSuccessMessage() const override {
-        return "Verification successful! Your account has been created. You can now log in.";
-    }
+//  std::string getVerificationSuccessMessage() const override {
+//         return "Verification successful! Your account has been created. You can now log in.";
+//     }
     void handleEvents(SDL_Event& event) override {
          Verification::handleEvents(event);}
     void update() override {
@@ -2794,7 +2934,7 @@ const char* text7 = "Didn't receive the code? Resend"; // Resend link
 const char* text8 = "Need help? Contact support"; // Contact support link
 std::string VerificationExpireMessage="The code has expired. Please request a new code.";
 std::string VerificationIncorrectMessage="The code you entered is incorrect. Please try again.";
-std::string VerificationSuccessMessage= getVerificationSuccessMessage();;
+//std::string VerificationSuccessMessage= getVerificationSuccessMessage();;
 Verification::render(text1, text2a, text2b, text3, text4, text5, text6, text7, text8, VerificationExpireMessage,VerificationIncorrectMessage,VerificationSuccessMessage);
     }
 
@@ -2807,9 +2947,9 @@ public:
 SVerificationScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* NunitoFont)
     : Verification (window ,renderer, NunitoFont )  
     {}
-     std::string getVerificationSuccessMessage() const override {
-        return "Verification successful! You can now reset your password.";
-    }
+    //  std::string getVerificationSuccessMessage() const override {
+    //     return "Verification successful! You can now reset your password.";
+    // }
     void handleEvents(SDL_Event& event) override {
        
        Verification::handleEvents(event);
@@ -2829,7 +2969,7 @@ SVerificationScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* N
         const char *text8 = "Need help? Contact support";      // Contact support link
 std::string VerificationExpireMessage="The code has expired. Please request a new code.";
 std::string VerificationIncorrectMessage="The code you entered is incorrect. Please try again.";
-std::string VerificationSuccessMessage= getVerificationSuccessMessage();;
+//std::string VerificationSuccessMessage= getVerificationSuccessMessage();;
 Verification::render(text1, text2a, text2b, text3, text4, text5, text6, text7, text8, VerificationExpireMessage,VerificationIncorrectMessage,VerificationSuccessMessage);
     }
     void cleanup() override {
@@ -2932,50 +3072,9 @@ public:
 
 
 
-
-
-
-
-
-class ProfileScreenState : public State {
-private:
-     SDL_Color white = { 255, 255, 255, 255 };
-    SDL_Color grey = { 100, 100, 100, 255 };
-    SDL_Color black = { 0, 0, 0, 255 };
-    SDL_Color darkgreen = { 0, 50, 0, 255  }; 
-    SDL_Color maroon = { 128, 0, 0, 255 };
- 
-//OK SO THIS IS MY NEW TARGET
-
-//COME ON AYESHA MAKE IT HAPPEN 
-
-public:
-   ProfileScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* NunitoFont)
-        : State(window, renderer, NunitoFont){
-        SDL_StartTextInput();
-        // Initialize other necessary variables if needed
-    }
-
-    void handleEvents(SDL_Event& event) override {
-      
-    }
-
-    void update() override {
-        // Update logic for New Password Screen if needed
-    }
-
-    void render() override {
-    }
-
-    void cleanup() override {
-        // Implement cleanup logic if needed
-    }
-
-   
-};
 class ProfileUpdateScreenState : public NavigationMenu{
 private:
-
+    // PGconn *dbConn;
     User* currentUser; // Pointer to the current user
 
 
@@ -3743,7 +3842,10 @@ const char* legalConsentText = "Legal and Consent";
 
  
 public:
-    // constructor
+    // // constructor
+    // ProfileUpdateScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* NunitoFont, TTF_Font* NimbusRomFont, User* user,PGconn *dbConn)
+    //     : NavigationMenu(window, renderer, NunitoFont), currentUser(user),dbConn(dbConn)
+ // constructor
     ProfileUpdateScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* NunitoFont, TTF_Font* NimbusRomFont, User* user)
         : NavigationMenu(window, renderer, NunitoFont), currentUser(user)
 
@@ -3809,33 +3911,33 @@ showlegalConsentText(true),
              if (currentUser == nullptr) {
             std::cerr << "Warning: currentUser is nullptr." << std::endl;
         }
-        if (db == nullptr) {
-            std::cerr << "Warning: db is nullptr." << std::endl;
+        // if (dbConn== nullptr) {
+        //     std::cerr << "Warning: db is nullptr." << std::endl;
 
-            std::cerr << "Database pointer value: " << db << std::endl;
+        //     std::cerr << "Database pointer value: " << dbConn << std::endl;
 
-        }
+        // }
         SDL_StartTextInput();
         // Initialize other necessary variables if needed
         isCheckbox1Checked = false;
         isCheckbox2Checked = false;
         isCheckbox3Checked = false;
     }
- void saveUserAgreements() {
-        // Ensure currentUser is not null
-        if (currentUser) {
-            std::string username = currentUser->getUsername();
-            std::string emailAddress = currentUser->getEmailAddress();
-            saveAgreementsToDatabase(db, *currentUser,isCheckbox1Checked, isCheckbox2Checked, isCheckbox3Checked);
-        } else  if (currentUser == nullptr) {
-            std::cerr << "Current user is not set." << std::endl;
-            return;
-        }
-        if (db == nullptr) {
-            std::cerr << "Database connection is not set." << std::endl;
-            return;
-        }
-    }
+//  void saveUserAgreements() {
+//         // Ensure currentUser is not null
+//         if (currentUser) {
+//             std::string username = currentUser->getUsername();
+//             std::string emailAddress = currentUser->getEmailAddress();
+//             saveAgreementsToDatabase(dbConn, *currentUser,isCheckbox1Checked, isCheckbox2Checked, isCheckbox3Checked);
+//         } else  if (currentUser == nullptr) {
+//             std::cerr << "Current user is not set." << std::endl;
+//             return;
+//         }
+//         if (dbConn == nullptr) {
+//             std::cerr << "Database connection is not set." << std::endl;
+//             return;
+//         }
+//     }
 
 
 
@@ -3843,13 +3945,13 @@ showlegalConsentText(true),
          NavigationMenu::handleEvents(event);
   
 
-    if (currentUser) {
-        std::string username = currentUser->getUsername();
-        std::string emailAddress = currentUser->getEmailAddress();
-        saveAgreementsToDatabase(db, *currentUser, isCheckbox1Checked, isCheckbox2Checked, isCheckbox3Checked);
-    } else {
-        std::cerr << "Current user is not set." << std::endl;
-    }
+    // if (currentUser) {
+    //     std::string username = currentUser->getUsername();
+    //     std::string emailAddress = currentUser->getEmailAddress();
+    //     saveAgreementsToDatabase(dbConn, *currentUser, isCheckbox1Checked, isCheckbox2Checked, isCheckbox3Checked);
+    // } else {
+    //     std::cerr << "Current user is not set." << std::endl;
+    // }
 
     if (event.type == SDL_TEXTINPUT) {
         if (enteringName) {
@@ -4591,17 +4693,6 @@ bool isClickOnHeading(int mouseX, int mouseY, int headingX, int headingY, int te
     return (mouseX >= headingX && mouseX <= headingX + textWidth &&
             mouseY >= headingY && mouseY <= headingY + textHeight);
 }
-
-
-
-
-void drawHeadings(SDL_Renderer* renderer)
-{// Personal Information
-
-}
-
-
-
 
 
 
@@ -5585,6 +5676,78 @@ if (isCheckbox3Checked) {
          NavigationMenu::cleanup();
     }
 };
+
+
+
+
+
+
+
+
+class ProfileScreenState : public  NavigationMenu {
+private:
+     SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color grey = { 100, 100, 100, 255 };
+    SDL_Color black = { 0, 0, 0, 255 };
+    SDL_Color darkgreen = { 0, 50, 0, 255  }; 
+    SDL_Color maroon = { 128, 0, 0, 255 };
+SDL_Color skyblue = {135, 206, 235, 255};
+
+
+int textWidthEditProfile, textHeightEditProfile;
+int xEditProfile= boxX + (boxWidth - textWidthEditProfile) / 16; 
+
+
+const int  yEditProfile =(10)- scrollOffsetY;
+    
+public:
+   ProfileScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* NunitoFont)
+        : NavigationMenu(window, renderer, NunitoFont) {
+        SDL_StartTextInput();
+        // Initialize other necessary variables if needed
+    }
+
+    void handleEvents(SDL_Event& event) override {
+       NavigationMenu::handleEvents(event);
+
+ if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_FINGERDOWN) {
+        int mouseX, mouseY;
+
+        if (event.type == SDL_MOUSEBUTTONDOWN) {
+            mouseX = event.button.x;
+            mouseY = event.button.y;
+        } else { // SDL_FINGERDOWN
+            mouseX = event.tfinger.x * Width;
+            mouseY = event.tfinger.y * Height;
+        }
+
+        std::cout << "Click at (" << mouseX << ", " << mouseY << ")" << std::endl;
+  if (mouseX >=  xEditProfile && mouseX <= xEditProfile + textWidthEditProfile && mouseY >=yEditProfile && mouseY <= yEditProfile + textHeightEditProfile) {
+      changeState(PROFILE_UPDATE_SCREEN);}}
+    }
+
+    void update() override {
+        NavigationMenu:: update();
+    }
+
+    void render() override {
+           NavigationMenu::render();
+          const char *textEditProfile = "Edit Profile";
+TTF_SizeText(NunitoFont, textEditProfile, &textWidthEditProfile, &textHeightEditProfile);
+
+renderText(textEditProfile, xEditProfile, yEditProfile- scrollOffsetY,skyblue, NunitoFont, renderer);
+    }
+
+    void cleanup() override {
+       NavigationMenu::cleanup();
+    }
+
+   
+};
+
+
+
+
 //i think so settings screen should be a base class and all other screens should be dereived from it 
 class SettingsScreenState : public NavigationMenu {
 private:
@@ -5857,9 +6020,8 @@ std::map<AppState, SDL_Color> backgroundColors = {
     {S_VERIFICATION_SCREEN, {50, 50, 50, 255}},    // Dark Grey
     {PASSWORD_RESET_SCREEN, {50, 50, 50, 255}},    // Dark Grey
     {HELP_SCREEN, {50, 50, 50, 255}},    // Dark Grey
-    {PROFILE_SCREEN, {50, 50, 50, 255}},    // Dark Grey
-    
     {PROFILE_UPDATE_SCREEN, {50, 50, 50, 255}},    // Dark Grey
+    {PROFILE_SCREEN, {50, 50, 50, 255}},    // Dark Grey
     {SETTINGS_SCREEN, {50, 50, 50, 255}},    // Dark Grey
     {COGNITIVE_STATS_SCREEN, {50, 50, 50, 255}},    // Dark Grey
     {DATA_STATS_SCREEN, {50, 50, 50, 255}},    // Dark Grey
@@ -5912,13 +6074,15 @@ void changeState(AppState newState) {
         case HELP_SCREEN:
             currentStateInstance = std::make_unique<HelpScreenState>(window, renderer, NunitoFont);
             break;
-             case PROFILE_SCREEN:
+             
+            case PROFILE_UPDATE_SCREEN:
+    // currentStateInstance = std::make_unique<ProfileUpdateScreenState>(window, renderer, NunitoFont, NimbusRomFont, currentUser.get(), dbConn);
+    // break;
+     currentStateInstance = std::make_unique<ProfileUpdateScreenState>(window, renderer, NunitoFont, NimbusRomFont, currentUser.get());
+    break;
+case PROFILE_SCREEN:
             currentStateInstance = std::make_unique<ProfileScreenState>(window, renderer, NunitoFont);
             break;
-            case PROFILE_UPDATE_SCREEN:
-    currentStateInstance = std::make_unique<ProfileUpdateScreenState>(window, renderer, NunitoFont, NimbusRomFont, currentUser.get(), db);
-    break;
-
              case SETTINGS_SCREEN:
             currentStateInstance = std::make_unique<SettingsScreenState>(window, renderer, NunitoFont);
             break;
@@ -5967,6 +6131,20 @@ void changeState(AppState newState) {
 // Main function
 int main(int argc, char* argv[]) {
 
+//  // Connection parameters
+//     const char* conninfo = "dbname=postgres  user=postgres password=MATRIXBREAKER hostaddr=127.0.0.1 port=5432";
+
+//     // Establishing connection to the database
+//     PGconn* dbConn= PQconnectdb(conninfo);
+
+//     // Check if the connection was successful
+//     if (PQstatus(dbConn) != CONNECTION_OK) {
+//         std::cerr << "Error connecting to PostgreSQL database: " << PQerrorMessage(dbConn) << std::endl;
+//         PQfinish(dbConn); // Clean up the connection object
+//         return 1; // Handle error as needed (e.g., exit application)
+//     }
+
+//     std::cout << "Connected to PostgreSQL database successfully!" << std::endl;
 
 
 
@@ -6037,20 +6215,23 @@ if (sodium_init() < 0) {
         SDL_Quit();
         return -1;
     }
+ // Gather user input (replace with actual input logic)
+    std::string emailAddress = "user@example.com"; // Replace with actual input
+    std::string username = "exampleUser";          // Replace with actual input
+    std::string hashedPassword = "hashedPassword123"; // Replace with actual input
 
-// Initialize the database
-    if (!initializeDatabase("C:/NEW/neurabyte.db")) { // Path provided here
-        std::cerr << "Failed to initialize database." << std::endl;
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        TTF_Quit();
-        SDL_Quit();
-        return 1;
-    }
+    // Initialize currentUser with gathered values
+    currentUser = std::make_unique<User>(emailAddress, username, hashedPassword);
 
-  // Initialize currentUser
-currentUser = std::make_unique<User>("default_email","default_username", "default_password" );
+    // Access properties using getters
+    std::string currentEmail = currentUser->getEmailAddress();
+    std::string currentUsername = currentUser->getUsername();
+    std::string currentHashedPassword = currentUser->getHashedPassword();
 
+    // Output to check values (for debugging or display)
+    std::cout << "Email: " << currentEmail << std::endl;
+    std::cout << "Username: " << currentUsername << std::endl;
+    std::cout << "Hashed Password: " << currentHashedPassword << std::endl;
 // Change state to SPLASH_SCREEN
 changeState(SPLASH_SCREEN);
     // Initialize start time
@@ -6096,7 +6277,7 @@ changeState(SPLASH_SCREEN);
         // Present renderer
         SDL_RenderPresent(renderer);
     }
-
+// PQfinish(dbConn);
     TTF_CloseFont(NunitoFont);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
