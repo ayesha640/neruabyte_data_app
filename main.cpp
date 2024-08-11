@@ -166,7 +166,7 @@ const int offset=20;
      return newTexture;
 }
 
-int radius = 15;
+const int radius = 15;
 void renderRoundedRect(SDL_Renderer* renderer, int x, int y, int w, int h, int radius, SDL_Color color) {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
     
@@ -1036,8 +1036,8 @@ public:
     TTF_SizeText(NunitoFont, "NEURABYTE", &textWidth, &textHeight);
 
 
-int textX = (Width-textWidth) / 2; // Center horizontally
-    int textY = (Height-textHeight )/ 2; // Center vertically
+const int textX = (Width-textWidth) / 2; // Center horizontally
+    const int textY = (Height-textHeight )/ 2; // Center vertically
 
         renderText("NEURABYTE",  textX, textY, white, NunitoFont, renderer);
     }
@@ -3073,7 +3073,7 @@ public:
 
 
 class ProfileUpdateScreenState : public NavigationMenu{
-private:
+public:
     // PGconn *dbConn;
     User* currentUser; // Pointer to the current user
 
@@ -3091,8 +3091,14 @@ private:
     std::string email, phone_number;
     std::string highest_degree, major_field;
     std::string health_conditions, fitness_routine, major_illnesses, mental_health_status, sleep_patterns;
+
+
+
     std::string neuropsychological_assessments, eeg, qeeg, fmri, mri, ct_scan, evoked_potentials, sleep_studies, csf_analysis;
     std::string text_content, pdfs, images, videos, audio, spreadsheets, presentations, code, models, ebooks;
+
+
+
     std::string primary_contact_name, relationship, emergency_phone_number;
     std::string consent_forms, license_agreements, terms_of_service;
 
@@ -3218,19 +3224,20 @@ bool showlegalConsentText9=false;
     // Calculate Y positions based on baseY and gap
     // DefinING the circle's position and radius
    
-    int centerY = (baseY -135)- scrollOffsetY; 
+   const  int centerY = (80)- scrollOffsetY; 
 
-    int circleradius = 80;   // radius of the circle
-
-
+   const  int circleradius = 80;   // radius of the circle
 
 
 
+
+const int UpdateButtonX= boxX + (boxWidth -200) / 15;
+ const int UpdateButtonY=(baseY -40)- scrollOffsetY;
 
 
 
 //original ones
-const int  yProfilePhoto = (baseY -40)- scrollOffsetY;
+
 
 const int  yPersonalInfo = (baseY)- scrollOffsetY;
 
@@ -3250,7 +3257,6 @@ const int  yLegalConsent = (baseY + 8 * gap)- scrollOffsetY;
 
 //for peronal info
 
-//const int  yPersonalInfo = (baseY)- scrollOffsetY;
 const int nameBox_Y =( baseY+gap)- scrollOffsetY;
 const int ageBox_Y =( baseY + 2*gap)- scrollOffsetY;
 const int genderBox_Y =( baseY + 3 * gap)- scrollOffsetY;
@@ -3557,7 +3563,10 @@ const int checkboxheight = 20;
 // Radius for rounded corners
 const int radius = 5;
 // Width and Height Variables for Text 
-int textWidthProfilePhoto, textHeightProfilePhoto;
+//nt textWidthProfilePhoto, textHeightProfilePhoto;
+
+
+
 int textWidthPersonalInfo, textHeightPersonalInfo;
 int textWidthSocialMedia, textHeightSocialMedia;
 int textWidthContactInfo, textHeightContactInfo;
@@ -3623,24 +3632,24 @@ int textWidthEmergencyPhoneNumber, textHeightEmergencyPhoneNumber;
 int textWidthConsentForms, textHeightConsentForms;
 int textWidthLicenseAgreements, textHeightLicenseAgreements;
 int textWidthTermsOfService, textHeightTermsOfService;
-int centerX = (boxX + (boxWidth - (circleradius*2)) / 2)+68;
+const int centerX = (boxX + (boxWidth - (circleradius*2)) / 2)+68;
 
 // X and Y Position Variables for Text Rendering
-int xProfilePhoto = boxX + (boxWidth - textWidthProfilePhoto) / 2;
+//const int xProfilePhoto = boxX + (boxWidth - textWidthProfilePhoto) / 2;
 
-int xPersonalInfo =100;
-int xSocialMedia = 100;
-int xContactInfo = 100;
-int xEducationInfo = 100;
-int xHealthWellness = 100;
-int xCognitiveReports = 100;
-int xCustomContent =100;
-int xEmergencyContact = 100;
-int xLegalConsent = 100;
+const int xPersonalInfo =100;
+const int xSocialMedia = 100;
+const int xContactInfo = 100;
+const int xEducationInfo = 100;
+const int xHealthWellness = 100;
+const int xCognitiveReports = 100;
+const int xCustomContent =100;
+const int xEmergencyContact = 100;
+const int xLegalConsent = 100;
 
 
 // X and Y Position Variables for Display Text Variables
-int xName = 100;
+const int xName = 100;
 int yName = nameBox_Y- scrollOffsetY;
 
 int xAge = 100;
@@ -3828,7 +3837,7 @@ int tickMiddleX3 =termsOfServiceBox_X + checkboxSize2 / 2;
 
 
 // Text Labels
-const char* profilePhotoText = "Profile Photo";
+//const char* profilePhotoText = "Profile Photo";
 
 const char* personalInfoText = "Personal Information";
 const char* socialMediaText = "Social Media Profiles";
@@ -3839,7 +3848,8 @@ const char* cognitiveReportsText = "Cognitive Reports";
 const char* customContentText = "Custom Content";
 const char* emergencyContactText = "Emergency Contact Information";
 const char* legalConsentText = "Legal and Consent";
-
+// Callback to update profile in ProfileScreenState
+    std::function<void()> onProfileUpdated;
  
 public:
     // // constructor
@@ -4514,6 +4524,14 @@ showlegalConsentText(true),
             isCheckbox3Checked = !isCheckbox3Checked;
             printf("Checkbox 3 state toggled: %d\n", isCheckbox3Checked);
         }
+if (x>= UpdateButtonX && x<=  UpdateButtonX + 100 && y >= UpdateButtonY && y <= UpdateButtonY + 30) {
+            if (onProfileUpdated) {
+                    onProfileUpdated(); // Notify ProfileScreenState to refresh
+
+                    //jub data base set kr lo tu yahan sey data database mn bhejny ka logic bhi yahein dalna
+                }
+               changeState(PROFILE_SCREEN);
+        } 
 
 //if click on personalInfoText then it should call that i think so i need to change it 
  SDL_GetMouseState(&x, &y);
@@ -4703,172 +4721,167 @@ bool isClickOnHeading(int mouseX, int mouseY, int headingX, int headingY, int te
       NavigationMenu::render();
 
 
+ const char *updatetext = "Update";
+        renderRoundedRect(renderer, UpdateButtonX, UpdateButtonY - scrollOffsetY, 100, 30, radius, darkgreen);
+
+  renderText(updatetext, UpdateButtonX+12,UpdateButtonY - scrollOffsetY, white, NunitoFont, renderer);
 
 
 // Display Text Variables
-std::string nameText = "Name" + name;
-std::string ageText = "Age" + age;
-std::string genderText = "Gender" + gender;
-std::string bioText = "Bio" + bio;
-std::string fieldOfInterestText = "Field of Interest" + field_of_interest;
-std::string dateOfBirthText = "Date of Birth" + date_of_birth;
-std::string spokenLanguagesText = "Spoken Languages" + spoken_languages;
-std::string hobbiesText = "Hobbies" + hobbies;
+ 
+  std::string nameText = "Name" + name;
+  std::string ageText = "Age" + age;
+  std::string genderText = "Gender" + gender;
+  std::string bioText = "Bio" + bio;
+  std::string fieldOfInterestText = "Field of Interest" + field_of_interest;
+  std::string dateOfBirthText = "Date of Birth" + date_of_birth;
+  std::string spokenLanguagesText = "Spoken Languages" + spoken_languages;
+  std::string hobbiesText = "Hobbies" + hobbies;
 
-std::string linkedinText = "LinkedIn" + linkedin;
-std::string twitterText = "Twitter" + twitter;
-std::string facebookText = "Facebook" + facebook;
-std::string instagramText = "Instagram" + instagram;
+  std::string linkedinText = "LinkedIn" + linkedin;
+  std::string twitterText = "Twitter" + twitter;
+  std::string facebookText = "Facebook" + facebook;
+  std::string instagramText = "Instagram" + instagram;
 
-std::string emailText = "Email" + email;
-std::string phoneNumberText = "Phone Number" + phone_number;
+  std::string emailText = "Email" + email;
+  std::string phoneNumberText = "Phone Number" + phone_number;
 
-std::string highestDegreeText = "Highest Degree Earned" + highest_degree;
-std::string majorFieldText = "Major Field of Study" + major_field;
+  std::string highestDegreeText = "Highest Degree Earned" + highest_degree;
+  std::string majorFieldText = "Major Field of Study" + major_field;
 
-std::string healthConditionsText = "Health Conditions" + health_conditions;
-std::string fitnessRoutineText = "Fitness Routine" + fitness_routine;
-std::string majorIllnessesText = "Major Illnesses" + major_illnesses;
-std::string mentalHealthStatusText = "Mental Health Status" + mental_health_status;
-std::string sleepPatternsText = "Sleep Patterns" + sleep_patterns;
+  std::string healthConditionsText = "Health Conditions" + health_conditions;
+  std::string fitnessRoutineText = "Fitness Routine" + fitness_routine;
+  std::string majorIllnessesText = "Major Illnesses" + major_illnesses;
+  std::string mentalHealthStatusText = "Mental Health Status" + mental_health_status;
+  std::string sleepPatternsText = "Sleep Patterns" + sleep_patterns;
 
-std::string neuropsychologicalAssessmentsText = "Neuropsychological Evaluation" + neuropsychological_assessments;
-std::string eegText = "Electroencephalography" + eeg;
-std::string qeegText = "Quantitative Electroencephalography" + qeeg;
-std::string fmriText = "Functional Magnetic Resonance Imaging" + fmri;
-std::string mriText = "Magnetic Resonance Imaging" + mri;
-std::string ctScanText = "Computed Tomography" + ct_scan;
-std::string evokedPotentialsText = "Evoked Potentials" + evoked_potentials;
-std::string sleepStudiesText = "Polysomnography" + sleep_studies;
-std::string csfAnalysisText = "Cerebrospinal Fluid Analysis" + csf_analysis;
+  std::string neuropsychologicalAssessmentsText = "Neuropsychological Evaluation" + neuropsychological_assessments;
+  std::string eegText = "Electroencephalography" + eeg;
+  std::string qeegText = "Quantitative Electroencephalography" + qeeg;
+  std::string fmriText = "Functional Magnetic Resonance Imaging" + fmri;
+  std::string mriText = "Magnetic Resonance Imaging" + mri;
+  std::string ctScanText = "Computed Tomography" + ct_scan;
+  std::string evokedPotentialsText = "Evoked Potentials" + evoked_potentials;
+  std::string sleepStudiesText = "Polysomnography" + sleep_studies;
+  std::string csfAnalysisText = "Cerebrospinal Fluid Analysis" + csf_analysis;
 
-std::string textContentText = "Text" + text_content;
-std::string pdfsText = "PDFs" + pdfs;
-std::string imagesText = "Images" + images;
-std::string videosText = "Videos" + videos;
-std::string audioText = "Audio" + audio;
-std::string spreadsheetsText = "Spreadsheets" + spreadsheets;
-std::string presentationsText = "Presentations" + presentations;
-std::string codeText = "Code" + code;
-std::string modelsText = "3D Models" + models;
-std::string ebooksText = "E-books" + ebooks;
+  std::string textContentText = "Text" + text_content;
+  std::string pdfsText = "PDFs" + pdfs;
+  std::string imagesText = "Images" + images;
+  std::string videosText = "Videos" + videos;
+  std::string audioText = "Audio" + audio;
+  std::string spreadsheetsText = "Spreadsheets" + spreadsheets;
+  std::string presentationsText = "Presentations" + presentations;
+  std::string codeText = "Code" + code;
+  std::string modelsText = "3D Models" + models;
+  std::string ebooksText = "E-books" + ebooks;
 
-std::string primaryContactNameText = "Primary Contact Name" + primary_contact_name;
-std::string relationshipText = "Relationship" + relationship;
-std::string emergencyPhoneNumberText = "Phone Number" + emergency_phone_number;
+  std::string primaryContactNameText = "Primary Contact Name" + primary_contact_name;
+  std::string relationshipText = "Relationship" + relationship;
+  std::string emergencyPhoneNumberText = "Phone Number" + emergency_phone_number;
 
-std::string consentFormsText = "Consent Forms" + consent_forms;
-std::string licenseAgreementsText = "License Agreements" + license_agreements;
-std::string termsOfServiceText = "Terms of Service" + terms_of_service;
+  std::string consentFormsText = "Consent Forms" + consent_forms;
+  std::string licenseAgreementsText = "License Agreements" + license_agreements;
+  std::string termsOfServiceText = "Terms of Service" + terms_of_service;
 
+  // Calculate Text Widths and Heights for const char* Labels
+  //TTF_SizeText(NunitoFont, profilePhotoText, &textWidthProfilePhoto, &textHeightProfilePhoto);
+  TTF_SizeText(NimbusRomFont, personalInfoText, &textWidthPersonalInfo, &textHeightPersonalInfo);
+  TTF_SizeText(NimbusRomFont, socialMediaText, &textWidthSocialMedia, &textHeightSocialMedia);
+  TTF_SizeText(NimbusRomFont, contactInfoText, &textWidthContactInfo, &textHeightContactInfo);
+  TTF_SizeText(NimbusRomFont, educationInfoText, &textWidthEducationInfo, &textHeightEducationInfo);
+  TTF_SizeText(NimbusRomFont, healthWellnessText, &textWidthHealthWellness, &textHeightHealthWellness);
+  TTF_SizeText(NimbusRomFont, cognitiveReportsText, &textWidthCognitiveReports, &textHeightCognitiveReports);
+  TTF_SizeText(NimbusRomFont, customContentText, &textWidthCustomContent, &textHeightCustomContent);
+  TTF_SizeText(NimbusRomFont, emergencyContactText, &textWidthEmergencyContact, &textHeightEmergencyContact);
+  TTF_SizeText(NimbusRomFont, legalConsentText, &textWidthLegalConsent, &textHeightLegalConsent);
 
+  // Calculate Text Widths and Heights for std::string Display Texts
+  TTF_SizeText(NunitoFont, nameText.c_str(), &textWidthName, &textHeightName);
+  TTF_SizeText(NunitoFont, ageText.c_str(), &textWidthAge, &textHeightAge);
+  TTF_SizeText(NunitoFont, genderText.c_str(), &textWidthGender, &textHeightGender);
+  TTF_SizeText(NunitoFont, bioText.c_str(), &textWidthBio, &textHeightBio);
+  TTF_SizeText(NunitoFont, fieldOfInterestText.c_str(), &textWidthFieldOfInterest, &textHeightFieldOfInterest);
+  TTF_SizeText(NunitoFont, dateOfBirthText.c_str(), &textWidthDateOfBirth, &textHeightDateOfBirth);
+  TTF_SizeText(NunitoFont, spokenLanguagesText.c_str(), &textWidthSpokenLanguages, &textHeightSpokenLanguages);
+  TTF_SizeText(NunitoFont, hobbiesText.c_str(), &textWidthHobbies, &textHeightHobbies);
 
+  TTF_SizeText(NunitoFont, linkedinText.c_str(), &textWidthLinkedin, &textHeightLinkedin);
+  TTF_SizeText(NunitoFont, twitterText.c_str(), &textWidthTwitter, &textHeightTwitter);
+  TTF_SizeText(NunitoFont, facebookText.c_str(), &textWidthFacebook, &textHeightFacebook);
+  TTF_SizeText(NunitoFont, instagramText.c_str(), &textWidthInstagram, &textHeightInstagram);
 
+  TTF_SizeText(NunitoFont, emailText.c_str(), &textWidthEmail, &textHeightEmail);
+  TTF_SizeText(NunitoFont, phoneNumberText.c_str(), &textWidthPhoneNumber, &textHeightPhoneNumber);
 
-// Calculate Text Widths and Heights for const char* Labels
-TTF_SizeText(NunitoFont, profilePhotoText, &textWidthProfilePhoto, &textHeightProfilePhoto);
-TTF_SizeText(NimbusRomFont, personalInfoText, &textWidthPersonalInfo, &textHeightPersonalInfo);
-TTF_SizeText(NimbusRomFont, socialMediaText, &textWidthSocialMedia, &textHeightSocialMedia);
-TTF_SizeText(NimbusRomFont, contactInfoText, &textWidthContactInfo, &textHeightContactInfo);
-TTF_SizeText(NimbusRomFont, educationInfoText, &textWidthEducationInfo, &textHeightEducationInfo);
-TTF_SizeText(NimbusRomFont, healthWellnessText, &textWidthHealthWellness, &textHeightHealthWellness);
-TTF_SizeText(NimbusRomFont, cognitiveReportsText, &textWidthCognitiveReports, &textHeightCognitiveReports);
-TTF_SizeText(NimbusRomFont, customContentText, &textWidthCustomContent, &textHeightCustomContent);
-TTF_SizeText(NimbusRomFont, emergencyContactText, &textWidthEmergencyContact, &textHeightEmergencyContact);
-TTF_SizeText(NimbusRomFont, legalConsentText, &textWidthLegalConsent, &textHeightLegalConsent);
+  TTF_SizeText(NunitoFont, highestDegreeText.c_str(), &textWidthHighestDegree, &textHeightHighestDegree);
+  TTF_SizeText(NunitoFont, majorFieldText.c_str(), &textWidthMajorField, &textHeightMajorField);
 
+  TTF_SizeText(NunitoFont, healthConditionsText.c_str(), &textWidthHealthConditions, &textHeightHealthConditions);
+  TTF_SizeText(NunitoFont, fitnessRoutineText.c_str(), &textWidthFitnessRoutine, &textHeightFitnessRoutine);
+  TTF_SizeText(NunitoFont, majorIllnessesText.c_str(), &textWidthMajorIllnesses, &textHeightMajorIllnesses);
+  TTF_SizeText(NunitoFont, mentalHealthStatusText.c_str(), &textWidthMentalHealthStatus, &textHeightMentalHealthStatus);
+  TTF_SizeText(NunitoFont, sleepPatternsText.c_str(), &textWidthSleepPatterns, &textHeightSleepPatterns);
 
+  TTF_SizeText(NunitoFont, neuropsychologicalAssessmentsText.c_str(), &textWidthNeuropsychologicalAssessments, &textHeightNeuropsychologicalAssessments);
+  TTF_SizeText(NunitoFont, eegText.c_str(), &textWidthEeg, &textHeightEeg);
+  TTF_SizeText(NunitoFont, qeegText.c_str(), &textWidthQeeg, &textHeightQeeg);
+  TTF_SizeText(NunitoFont, fmriText.c_str(), &textWidthFmri, &textHeightFmri);
+  TTF_SizeText(NunitoFont, mriText.c_str(), &textWidthMri, &textHeightMri);
+  TTF_SizeText(NunitoFont, ctScanText.c_str(), &textWidthCtScan, &textHeightCtScan);
+  TTF_SizeText(NunitoFont, evokedPotentialsText.c_str(), &textWidthEvokedPotentials, &textHeightEvokedPotentials);
+  TTF_SizeText(NunitoFont, sleepStudiesText.c_str(), &textWidthSleepStudies, &textHeightSleepStudies);
+  TTF_SizeText(NunitoFont, csfAnalysisText.c_str(), &textWidthCsfAnalysis, &textHeightCsfAnalysis);
 
-// Calculate Text Widths and Heights for std::string Display Texts
-TTF_SizeText(NunitoFont, nameText.c_str(), &textWidthName, &textHeightName);
-TTF_SizeText(NunitoFont, ageText.c_str(), &textWidthAge, &textHeightAge);
-TTF_SizeText(NunitoFont, genderText.c_str(), &textWidthGender, &textHeightGender);
-TTF_SizeText(NunitoFont, bioText.c_str(), &textWidthBio, &textHeightBio);
-TTF_SizeText(NunitoFont, fieldOfInterestText.c_str(), &textWidthFieldOfInterest, &textHeightFieldOfInterest);
-TTF_SizeText(NunitoFont, dateOfBirthText.c_str(), &textWidthDateOfBirth, &textHeightDateOfBirth);
-TTF_SizeText(NunitoFont, spokenLanguagesText.c_str(), &textWidthSpokenLanguages, &textHeightSpokenLanguages);
-TTF_SizeText(NunitoFont, hobbiesText.c_str(), &textWidthHobbies, &textHeightHobbies);
+  TTF_SizeText(NunitoFont, textContentText.c_str(), &textWidthTextContent, &textHeightTextContent);
+  TTF_SizeText(NunitoFont, pdfsText.c_str(), &textWidthPdfs, &textHeightPdfs);
+  TTF_SizeText(NunitoFont, imagesText.c_str(), &textWidthImages, &textHeightImages);
+  TTF_SizeText(NunitoFont, videosText.c_str(), &textWidthVideos, &textHeightVideos);
+  TTF_SizeText(NunitoFont, audioText.c_str(), &textWidthAudio, &textHeightAudio);
+  TTF_SizeText(NunitoFont, spreadsheetsText.c_str(), &textWidthSpreadsheets, &textHeightSpreadsheets);
+  TTF_SizeText(NunitoFont, presentationsText.c_str(), &textWidthPresentations, &textHeightPresentations);
+  TTF_SizeText(NunitoFont, codeText.c_str(), &textWidthCode, &textHeightCode);
+  TTF_SizeText(NunitoFont, modelsText.c_str(), &textWidthModels, &textHeightModels);
+  TTF_SizeText(NunitoFont, ebooksText.c_str(), &textWidthEbooks, &textHeightEbooks);
 
-TTF_SizeText(NunitoFont, linkedinText.c_str(), &textWidthLinkedin, &textHeightLinkedin);
-TTF_SizeText(NunitoFont, twitterText.c_str(), &textWidthTwitter, &textHeightTwitter);
-TTF_SizeText(NunitoFont, facebookText.c_str(), &textWidthFacebook, &textHeightFacebook);
-TTF_SizeText(NunitoFont, instagramText.c_str(), &textWidthInstagram, &textHeightInstagram);
+  TTF_SizeText(NunitoFont, primaryContactNameText.c_str(), &textWidthPrimaryContactName, &textHeightPrimaryContactName);
+  TTF_SizeText(NunitoFont, relationshipText.c_str(), &textWidthRelationship, &textHeightRelationship);
+  TTF_SizeText(NunitoFont, emergencyPhoneNumberText.c_str(), &textWidthEmergencyPhoneNumber, &textHeightEmergencyPhoneNumber);
 
-TTF_SizeText(NunitoFont, emailText.c_str(), &textWidthEmail, &textHeightEmail);
-TTF_SizeText(NunitoFont, phoneNumberText.c_str(), &textWidthPhoneNumber, &textHeightPhoneNumber);
+  TTF_SizeText(NunitoFont, consentFormsText.c_str(), &textWidthConsentForms, &textHeightConsentForms);
+  TTF_SizeText(NunitoFont, licenseAgreementsText.c_str(), &textWidthLicenseAgreements, &textHeightLicenseAgreements);
+  TTF_SizeText(NunitoFont, termsOfServiceText.c_str(), &textWidthTermsOfService, &textHeightTermsOfService);
 
-TTF_SizeText(NunitoFont, highestDegreeText.c_str(), &textWidthHighestDegree, &textHeightHighestDegree);
-TTF_SizeText(NunitoFont, majorFieldText.c_str(), &textWidthMajorField, &textHeightMajorField);
+  // Rendering Text Fields
 
-TTF_SizeText(NunitoFont, healthConditionsText.c_str(), &textWidthHealthConditions, &textHeightHealthConditions);
-TTF_SizeText(NunitoFont, fitnessRoutineText.c_str(), &textWidthFitnessRoutine, &textHeightFitnessRoutine);
-TTF_SizeText(NunitoFont, majorIllnessesText.c_str(), &textWidthMajorIllnesses, &textHeightMajorIllnesses);
-TTF_SizeText(NunitoFont, mentalHealthStatusText.c_str(), &textWidthMentalHealthStatus, &textHeightMentalHealthStatus);
-TTF_SizeText(NunitoFont, sleepPatternsText.c_str(), &textWidthSleepPatterns, &textHeightSleepPatterns);
+  // Profile Photo
 
-TTF_SizeText(NunitoFont, neuropsychologicalAssessmentsText.c_str(), &textWidthNeuropsychologicalAssessments, &textHeightNeuropsychologicalAssessments);
-TTF_SizeText(NunitoFont, eegText.c_str(), &textWidthEeg, &textHeightEeg);
-TTF_SizeText(NunitoFont, qeegText.c_str(), &textWidthQeeg, &textHeightQeeg);
-TTF_SizeText(NunitoFont, fmriText.c_str(), &textWidthFmri, &textHeightFmri);
-TTF_SizeText(NunitoFont, mriText.c_str(), &textWidthMri, &textHeightMri);
-TTF_SizeText(NunitoFont, ctScanText.c_str(), &textWidthCtScan, &textHeightCtScan);
-TTF_SizeText(NunitoFont, evokedPotentialsText.c_str(), &textWidthEvokedPotentials, &textHeightEvokedPotentials);
-TTF_SizeText(NunitoFont, sleepStudiesText.c_str(), &textWidthSleepStudies, &textHeightSleepStudies);
-TTF_SizeText(NunitoFont, csfAnalysisText.c_str(), &textWidthCsfAnalysis, &textHeightCsfAnalysis);
+  // Set draw color for the circle (white)
+  SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+  // Draw the circle at the specified position
+  DrawCircle(renderer, centerX, centerY - scrollOffsetY, circleradius);
 
-TTF_SizeText(NunitoFont, textContentText.c_str(), &textWidthTextContent, &textHeightTextContent);
-TTF_SizeText(NunitoFont, pdfsText.c_str(), &textWidthPdfs, &textHeightPdfs);
-TTF_SizeText(NunitoFont, imagesText.c_str(), &textWidthImages, &textHeightImages);
-TTF_SizeText(NunitoFont, videosText.c_str(), &textWidthVideos, &textHeightVideos);
-TTF_SizeText(NunitoFont, audioText.c_str(), &textWidthAudio, &textHeightAudio);
-TTF_SizeText(NunitoFont, spreadsheetsText.c_str(), &textWidthSpreadsheets, &textHeightSpreadsheets);
-TTF_SizeText(NunitoFont, presentationsText.c_str(), &textWidthPresentations, &textHeightPresentations);
-TTF_SizeText(NunitoFont, codeText.c_str(), &textWidthCode, &textHeightCode);
-TTF_SizeText(NunitoFont, modelsText.c_str(), &textWidthModels, &textHeightModels);
-TTF_SizeText(NunitoFont, ebooksText.c_str(), &textWidthEbooks, &textHeightEbooks);
+  //renderText(profilePhotoText, xProfilePhoto, yProfilePhoto - scrollOffsetY, white, NunitoFont, renderer);
 
-TTF_SizeText(NunitoFont, primaryContactNameText.c_str(), &textWidthPrimaryContactName, &textHeightPrimaryContactName);
-TTF_SizeText(NunitoFont, relationshipText.c_str(), &textWidthRelationship, &textHeightRelationship);
-TTF_SizeText(NunitoFont, emergencyPhoneNumberText.c_str(), &textWidthEmergencyPhoneNumber, &textHeightEmergencyPhoneNumber);
+  if (!showPersonalInfoDetails && !showSocialMediaDetails &&
+      !showContactInfoDetails &&
+      !showEducationInfoDetails &&
+      !showHealthWellnessDetails &&
+      !showCognitiveReportsDetails &&
+      !showCustomContentDetails &&
+      !showEmergencyContactDetails &&
+      !showLegalConsentDetails)
+  {
 
-TTF_SizeText(NunitoFont, consentFormsText.c_str(), &textWidthConsentForms, &textHeightConsentForms);
-TTF_SizeText(NunitoFont, licenseAgreementsText.c_str(), &textWidthLicenseAgreements, &textHeightLicenseAgreements);
-TTF_SizeText(NunitoFont, termsOfServiceText.c_str(), &textWidthTermsOfService, &textHeightTermsOfService);
-
-// Rendering Text Fields
-
-// Profile Photo
-
-    // Set draw color for the circle (white)
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
- // Draw the circle at the specified position
-    DrawCircle(renderer, centerX, centerY- scrollOffsetY, circleradius);
-
-
-
-renderText(profilePhotoText, xProfilePhoto, yProfilePhoto- scrollOffsetY, white, NunitoFont, renderer);
-
-
-
- if (!showPersonalInfoDetails && !showSocialMediaDetails&& 
- !showContactInfoDetails &&
-     !showEducationInfoDetails &&
-     !showHealthWellnessDetails &&
-     !showCognitiveReportsDetails&&
-     !showCustomContentDetails&&
-     !showEmergencyContactDetails&&
-     !showLegalConsentDetails){
-
-
-showpersonalInfoText= true;
-showsocialMediaText= true;
-showcontactInfoText= true;
-showeducationInfoText= true;
-showhealthWellnessText= true;
-showcognitiveReportsText= true;
-showcustomContentText= true;
-showemergencyContactText= true;
-showlegalConsentText= true;
+      showpersonalInfoText = true;
+      showsocialMediaText = true;
+      showcontactInfoText = true;
+      showeducationInfoText = true;
+      showhealthWellnessText = true;
+      showcognitiveReportsText = true;
+      showcustomContentText = true;
+      showemergencyContactText = true;
+      showlegalConsentText = true;
 
     }
 
@@ -5677,73 +5690,203 @@ if (isCheckbox3Checked) {
     }
 };
 
-
-
-
-
-
-
-
-class ProfileScreenState : public  NavigationMenu {
+//////////////////////////////////////////////////////
+class ProfileScreenState : public NavigationMenu {
 private:
-     SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color white = { 255, 255, 255, 255 };
     SDL_Color grey = { 100, 100, 100, 255 };
     SDL_Color black = { 0, 0, 0, 255 };
-    SDL_Color darkgreen = { 0, 50, 0, 255  }; 
+    SDL_Color darkgreen = { 0, 50, 0, 255 };
     SDL_Color maroon = { 128, 0, 0, 255 };
-SDL_Color skyblue = {135, 206, 235, 255};
+    SDL_Color skyblue = { 135, 206, 235, 255 };
+     const int baseY = 200;
 
 
-int textWidthEditProfile, textHeightEditProfile;
-int xEditProfile= boxX + (boxWidth - textWidthEditProfile) / 16; 
+   const int centerY = (90)- scrollOffsetY; 
+const int centerX = (boxX + (boxWidth - (circleradius*2)) / 2)+68;
+ const int circleradius = 90;   // radius of the circle
 
 
-const int  yEditProfile =(10)- scrollOffsetY;
-    
+
+
+
+    int textWidthEditProfile = 0, textHeightEditProfile = 0;
+    int xEditProfile = 0;
+    const int yEditProfile = 10 - scrollOffsetY;
+  ProfileUpdateScreenState profileUpdateScreen; 
+    bool profileUpdated = false;
+
 public:
-   ProfileScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* NunitoFont)
-        : NavigationMenu(window, renderer, NunitoFont) {
+    ProfileScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* NunitoFont, ProfileUpdateScreenState& profileScreen)
+        : NavigationMenu(window, renderer, NunitoFont), profileUpdateScreen(profileScreen) {
         SDL_StartTextInput();
-        // Initialize other necessary variables if needed
+
+        // Register the callback to update the profile
+        profileUpdateScreen.onProfileUpdated = [this]() {
+            profileUpdated = true;
+        };
     }
 
     void handleEvents(SDL_Event& event) override {
-       NavigationMenu::handleEvents(event);
+        NavigationMenu::handleEvents(event);
 
- if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_FINGERDOWN) {
-        int mouseX, mouseY;
+        if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_FINGERDOWN) {
+            int mouseX, mouseY;
 
-        if (event.type == SDL_MOUSEBUTTONDOWN) {
-            mouseX = event.button.x;
-            mouseY = event.button.y;
-        } else { // SDL_FINGERDOWN
-            mouseX = event.tfinger.x * Width;
-            mouseY = event.tfinger.y * Height;
+            if (event.type == SDL_MOUSEBUTTONDOWN) {
+                mouseX = event.button.x;
+                mouseY = event.button.y;
+            } else { // SDL_FINGERDOWN
+                mouseX = event.tfinger.x * Width;
+                mouseY = event.tfinger.y * Height;
+            }
+
+            std::cout << "Click at (" << mouseX << ", " << mouseY << ")" << std::endl;
+
+            if (mouseX >= xEditProfile && mouseX <= xEditProfile + textWidthEditProfile &&
+                mouseY >= yEditProfile && mouseY <= yEditProfile + textHeightEditProfile) {
+                changeState(PROFILE_UPDATE_SCREEN);
+            }
         }
-
-        std::cout << "Click at (" << mouseX << ", " << mouseY << ")" << std::endl;
-  if (mouseX >=  xEditProfile && mouseX <= xEditProfile + textWidthEditProfile && mouseY >=yEditProfile && mouseY <= yEditProfile + textHeightEditProfile) {
-      changeState(PROFILE_UPDATE_SCREEN);}}
     }
 
     void update() override {
-        NavigationMenu:: update();
+        NavigationMenu::update();
+
+        if (profileUpdated) {
+            // Handle profile update logic
+            profileUpdated = false;
+        }
     }
 
     void render() override {
-           NavigationMenu::render();
-          const char *textEditProfile = "Edit Profile";
-TTF_SizeText(NunitoFont, textEditProfile, &textWidthEditProfile, &textHeightEditProfile);
+        NavigationMenu::render();
 
-renderText(textEditProfile, xEditProfile, yEditProfile- scrollOffsetY,skyblue, NunitoFont, renderer);
+        const char* textEditProfile = "Edit Profile";
+        TTF_SizeText(NunitoFont, textEditProfile, &textWidthEditProfile, &textHeightEditProfile);
+
+        xEditProfile = boxX + (boxWidth - textWidthEditProfile) / 16;
+
+        renderText(textEditProfile, xEditProfile, yEditProfile- scrollOffsetY, skyblue, NunitoFont, renderer);
+
+        renderProfileDetails(profileUpdated);
     }
 
     void cleanup() override {
-       NavigationMenu::cleanup();
+        NavigationMenu::cleanup();
     }
 
-   
+    void setProfileUpdated(bool updated) {
+        profileUpdated = updated;
+    }
+
+private:
+
+void renderProfileDetails(bool isUpdated = false) {
+    // Set draw color for the circle (white)
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    // Draw the circle at the specified position
+    DrawCircle(renderer, centerX, centerY - scrollOffsetY, circleradius);
+
+    const int sectionWidth = Width - 150;  // Width of each section box
+    const int sectionStartX = (Width - sectionWidth) / 2;  // X position where sections start
+    const int sectionSpacing = 15;  // Space between sections
+
+    // Define the colors for section boxes
+    SDL_Color boxColor = {50, 50, 50, 255};       // Base color
+    SDL_Color boxShadeColor = {75, 75, 75, 255};  // Slightly different shade
+
+    int currentY = 200;  // Starting Y position for the first section
+
+    // Helper lambda to draw a section box
+    auto drawSectionBox = [&](int yPos, int height, SDL_Color color) {
+        SDL_Rect sectionRect = {sectionStartX, yPos, sectionWidth, height};
+        SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+        SDL_RenderFillRect(renderer, &sectionRect);
+    };
+
+    // Helper lambda to render section title and content aligned
+    auto renderSectionText = [&](const std::string& title, const std::string& content, int yPos) {
+        renderText(title.c_str(), sectionStartX + 20, yPos, white, NunitoFont, renderer);
+        renderText(content.c_str(), sectionStartX + 180, yPos, white, NunitoFont, renderer);
+    };
+
+    // Helper lambda to calculate the required height for a section based on the number of lines
+    auto calculateSectionHeight = [&](int numLines) {
+        return 30 + numLines * 30;  // Adjust 30 to match line height and padding
+    };
+
+    // Render Personal Information Section
+    int personalInfoLines = 8; // Number of lines in the Personal Information section
+    int personalInfoHeight = calculateSectionHeight(personalInfoLines);
+    drawSectionBox(currentY - scrollOffsetY, personalInfoHeight, boxColor);
+    renderSectionText("Name:", isUpdated ? profileUpdateScreen.name : "[Your Name]", currentY + 20 - scrollOffsetY);
+    renderSectionText("Age:", isUpdated ? profileUpdateScreen.age : "[Your Age]", currentY + 50 - scrollOffsetY);
+    renderSectionText("Gender:", isUpdated ? profileUpdateScreen.gender : "[Your Gender]", currentY + 80 - scrollOffsetY);
+    renderSectionText("Date of Birth:", isUpdated ? profileUpdateScreen.date_of_birth : "[Your Date of Birth]", currentY + 110 - scrollOffsetY);
+    renderSectionText("Bio:", isUpdated ? profileUpdateScreen.bio : "[Your Bio]", currentY + 140 - scrollOffsetY);
+    renderSectionText("Field of Interest:", isUpdated ? profileUpdateScreen.field_of_interest : "[Your Field of Interest]", currentY + 170 - scrollOffsetY);
+    renderSectionText("Spoken Languages:", isUpdated ? profileUpdateScreen.spoken_languages : "[Your Languages]", currentY + 200 - scrollOffsetY);
+    renderSectionText("Hobbies:", isUpdated ? profileUpdateScreen.hobbies : "[Your Hobbies]", currentY + 230 - scrollOffsetY);
+    currentY += personalInfoHeight + sectionSpacing;
+
+    // Render Social Media Section
+    int socialMediaLines = 4;
+    int socialMediaHeight = calculateSectionHeight(socialMediaLines);
+    drawSectionBox(currentY - scrollOffsetY, socialMediaHeight, boxShadeColor);
+    renderSectionText("LinkedIn:", isUpdated ? profileUpdateScreen.linkedin : "[Your LinkedIn]", currentY + 20 - scrollOffsetY);
+    renderSectionText("Twitter:", isUpdated ? profileUpdateScreen.twitter : "[Your Twitter]", currentY + 50 - scrollOffsetY);
+    renderSectionText("Facebook:", isUpdated ? profileUpdateScreen.facebook : "[Your Facebook]", currentY + 80 - scrollOffsetY);
+    renderSectionText("Instagram:", isUpdated ? profileUpdateScreen.instagram : "[Your Instagram]", currentY + 110 - scrollOffsetY);
+    currentY += socialMediaHeight + sectionSpacing;
+
+    // Render Contact Information Section
+    int contactInfoLines = 2;
+    int contactInfoHeight = calculateSectionHeight(contactInfoLines);
+    drawSectionBox(currentY - scrollOffsetY, contactInfoHeight, boxColor);
+    renderSectionText("Email:", isUpdated ? profileUpdateScreen.email : "[Your Email]", currentY + 20 - scrollOffsetY);
+    renderSectionText("Phone Number:", isUpdated ? profileUpdateScreen.phone_number : "[Your Phone Number]", currentY + 50 - scrollOffsetY);
+    currentY += contactInfoHeight + sectionSpacing;
+
+    // Render Education Section
+    int educationLines = 2;
+    int educationHeight = calculateSectionHeight(educationLines);
+    drawSectionBox(currentY - scrollOffsetY, educationHeight, boxShadeColor);
+    renderSectionText("Highest Degree:", isUpdated ? profileUpdateScreen.highest_degree : "[Your Degree]", currentY + 20 - scrollOffsetY);
+    renderSectionText("Major Field:", isUpdated ? profileUpdateScreen.major_field : "[Your Major Field]", currentY + 50 - scrollOffsetY);
+    currentY += educationHeight + sectionSpacing;
+
+    // Render Health Information Section
+    int healthInfoLines = 5;
+    int healthInfoHeight = calculateSectionHeight(healthInfoLines);
+    drawSectionBox(currentY - scrollOffsetY, healthInfoHeight, boxColor);
+    renderSectionText("Health Conditions:", isUpdated ? profileUpdateScreen.health_conditions : "[Your Health Conditions]", currentY + 20 - scrollOffsetY);
+    renderSectionText("Fitness Routine:", isUpdated ? profileUpdateScreen.fitness_routine : "[Your Fitness Routine]", currentY + 50 - scrollOffsetY);
+    renderSectionText("Major Illnesses:", isUpdated ? profileUpdateScreen.major_illnesses : "[Your Major Illnesses]", currentY + 80 - scrollOffsetY);
+    renderSectionText("Mental Health Status:", isUpdated ? profileUpdateScreen.mental_health_status : "[Your Mental Health Status]", currentY + 110 - scrollOffsetY);
+    renderSectionText("Sleep Patterns:", isUpdated ? profileUpdateScreen.sleep_patterns : "[Your Sleep Patterns]", currentY + 140 - scrollOffsetY);
+    currentY += healthInfoHeight + sectionSpacing;
+
+    // Render Emergency Contact Section
+    int emergencyContactLines = 3;
+    int emergencyContactHeight = calculateSectionHeight(emergencyContactLines);
+    drawSectionBox(currentY - scrollOffsetY, emergencyContactHeight, boxShadeColor);
+    renderSectionText("Emergency Contact:", isUpdated ? profileUpdateScreen.primary_contact_name : "[Emergency Contact Name]", currentY + 20 - scrollOffsetY);
+    renderSectionText("Relationship:", isUpdated ? profileUpdateScreen.relationship : "[Your Relationship]", currentY + 50 - scrollOffsetY);
+    renderSectionText("Emergency Phone:", isUpdated ? profileUpdateScreen.emergency_phone_number : "[Emergency Phone Number]", currentY + 80 - scrollOffsetY);
+    currentY += emergencyContactHeight + sectionSpacing;
+}
+
+
+
+
+
+
 };
+
+////////////////////////////////////////////////////////////////////
+
+
 
 
 
@@ -6081,8 +6224,11 @@ void changeState(AppState newState) {
      currentStateInstance = std::make_unique<ProfileUpdateScreenState>(window, renderer, NunitoFont, NimbusRomFont, currentUser.get());
     break;
 case PROFILE_SCREEN:
-            currentStateInstance = std::make_unique<ProfileScreenState>(window, renderer, NunitoFont);
+           {
+            ProfileUpdateScreenState profileUpdateScreen(window, renderer, NunitoFont, NimbusRomFont, currentUser.get());
+            currentStateInstance = std::make_unique<ProfileScreenState>(window, renderer, NunitoFont, profileUpdateScreen);
             break;
+        }
              case SETTINGS_SCREEN:
             currentStateInstance = std::make_unique<SettingsScreenState>(window, renderer, NunitoFont);
             break;
