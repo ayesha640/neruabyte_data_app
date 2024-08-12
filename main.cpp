@@ -3266,145 +3266,20 @@ const int fieldOfInterestBox_Y =( baseY + 5 * gap)- scrollOffsetY;
 const int dateOfBirthBox_Y =( baseY + 6 * gap)- scrollOffsetY;
 const int spokenLanguagesBox_Y =( baseY + 7 * gap)- scrollOffsetY;
 const int hobbiesBox_Y = (baseY + 8 * gap)- scrollOffsetY;
-const int ySocialMedia1= ( baseY + 9 * gap)- scrollOffsetY;
 
-const int yContactInfo1= ( baseY + 10 * gap)- scrollOffsetY;
-
-const int yEducationInfo1= ( baseY + 11* gap)- scrollOffsetY;
-
-const int yHealthWellness1= ( baseY + 12 * gap)- scrollOffsetY;
-
-const int yCognitiveReports1= ( baseY + 13 * gap)- scrollOffsetY;
-const int yCustomContent1= ( baseY + 14 * gap)- scrollOffsetY;
-
-const int yEmergencyContact1= ( baseY + 15 * gap)- scrollOffsetY;
-
-const int yLegalConsent1= ( baseY + 16 * gap)- scrollOffsetY;
-
-
-
-//for socail media
-const int  yPersonalInfo2 = (baseY)- scrollOffsetY;
-
-
-const int  ySocialMedia2 = (baseY +gap)- scrollOffsetY;
 
 const int linkedinBox_Y = (baseY +  2* gap)- scrollOffsetY;
 const int twitterBox_Y =( baseY + 3* gap)- scrollOffsetY;
 const int facebookBox_Y = (baseY + 4 * gap)- scrollOffsetY;
 const int instagramBox_Y = (baseY + 5 * gap)- scrollOffsetY;
-const int yContactInfo2= ( baseY + 6 * gap)- scrollOffsetY;
-
-const int yEducationInfo2= ( baseY + 7* gap)- scrollOffsetY;
-
-const int yHealthWellness2= ( baseY + 8* gap)- scrollOffsetY;
-
-const int yCognitiveReports2= ( baseY + 9* gap)- scrollOffsetY;
-const int yCustomContent2= ( baseY + 10 * gap)- scrollOffsetY;
-
-const int yEmergencyContact2= ( baseY + 11* gap)- scrollOffsetY;
-
-const int yLegalConsent2= ( baseY + 12 * gap)- scrollOffsetY;
 
 
-
-
-
-
-
-
-//for contact
-const int  yPersonalInfo3 = (baseY)- scrollOffsetY;
-const int ySocialMedia3= ( baseY + gap)- scrollOffsetY;
-
-
-
-const int  yContactInfo3 = ( baseY +2*gap)- scrollOffsetY;
-const int emailBox_Y =( baseY + 3*  gap)- scrollOffsetY;
-const int phoneNumberBox_Y =( baseY + 4 * gap)- scrollOffsetY;
-
-const int yEducationInfo3= ( baseY + 5* gap)- scrollOffsetY;
-
-const int yHealthWellness3= ( baseY + 6 * gap)- scrollOffsetY;
-
-const int yCognitiveReports3= ( baseY + 7 * gap)- scrollOffsetY;
-const int yCustomContent3= ( baseY + 8 * gap)- scrollOffsetY;
-
-const int yEmergencyContact3= ( baseY + 9 * gap)- scrollOffsetY;
-
-const int yLegalConsent3= ( baseY + 10 * gap)- scrollOffsetY;
-
-
-
-
-
-//for education 
-const int  yPersonalInfo4 = (baseY)- scrollOffsetY;
-const int ySocialMedia4= ( baseY +  gap)- scrollOffsetY;
-
-const int yContactInfo4= ( baseY + 2 * gap)- scrollOffsetY;
-
-const int  yEducationInfo4 = ( baseY+3*gap )- scrollOffsetY;
-const int highestDegreeBox_Y =( baseY + 4*  gap)- scrollOffsetY;
-const int majorFieldBox_Y =( baseY + 5 * gap)- scrollOffsetY;
-
-const int yHealthWellness4= ( baseY + 6 * gap)- scrollOffsetY;
-
-const int yCognitiveReports4= ( baseY + 7* gap)- scrollOffsetY;
-const int yCustomContent4= ( baseY + 8 * gap)- scrollOffsetY;
-
-const int yEmergencyContact4= ( baseY + 9 * gap)- scrollOffsetY;
-
-const int yLegalConsent4= ( baseY + 10 * gap)- scrollOffsetY;
-
-
-
-
-
-
-
-
-//for healthwellness
-const int  yPersonalInfo5 = (baseY)- scrollOffsetY;
-const int ySocialMedia5= ( baseY + gap)- scrollOffsetY;
-
-const int yContactInfo5= ( baseY + 2 * gap)- scrollOffsetY;
-
-const int yEducationInfo5= ( baseY + 3* gap)- scrollOffsetY;
-const int  yHealthWellness5 = (baseY+4 *gap  )- scrollOffsetY;
 const int healthConditionsBox_Y = (baseY + 5*  gap)- scrollOffsetY;
 const int fitnessRoutineBox_Y =( baseY + 6 * gap)- scrollOffsetY;
 const int majorIllnessesBox_Y = (baseY + 7 * gap)- scrollOffsetY;
 const int mentalHealthStatusBox_Y =( baseY +8 * gap)- scrollOffsetY;
 const int sleepPatternsBox_Y =( baseY +9 * gap)- scrollOffsetY;
-const int yCognitiveReports5= ( baseY + 10 * gap)- scrollOffsetY;
-const int yCustomContent5= ( baseY + 11 * gap)- scrollOffsetY;
 
-const int yEmergencyContact5= ( baseY + 12 * gap)- scrollOffsetY;
-
-const int yLegalConsent5= ( baseY + 13 * gap)- scrollOffsetY;
-
-
-
-
-
-
-
-
-
-//for cognitive
-const int  yPersonalInfo6 = (baseY)- scrollOffsetY;
-const int ySocialMedia6= ( baseY +  gap)- scrollOffsetY;
-
-const int yContactInfo6= ( baseY + 2 * gap)- scrollOffsetY;
-
-const int yEducationInfo6= ( baseY + 3* gap)- scrollOffsetY;
-
-const int yHealthWellness6= ( baseY + 4 * gap)- scrollOffsetY;
-
-
-
-const int  yCognitiveReports6 = ( baseY+5 * gap )- scrollOffsetY;
 const int neuropsychologicalAssessmentsBox_Y =( baseY + 6* gap)- scrollOffsetY;
 const int eegBox_Y =( baseY + 7 * gap)- scrollOffsetY;
 const int qeegBox_Y =( baseY + 8 * gap)- scrollOffsetY;
@@ -3414,36 +3289,14 @@ const int ctScanBox_Y =( baseY + 11 * gap)- scrollOffsetY;
 const int evokedPotentialsBox_Y = (baseY + 12 * gap)- scrollOffsetY;
 const int sleepStudiesBox_Y =( baseY +13 * gap)- scrollOffsetY;
 const int csfAnalysisBox_Y = (baseY + 14 * gap)- scrollOffsetY;
-const int yCustomContent6= ( baseY + 15 * gap)- scrollOffsetY;
-
-const int yEmergencyContact6= ( baseY + 16 * gap)- scrollOffsetY;
-
-const int yLegalConsent6= ( baseY + 17 * gap)- scrollOffsetY;
 
 
+const int emailBox_Y =( baseY + 3*  gap)- scrollOffsetY;
+const int phoneNumberBox_Y =( baseY + 4 * gap)- scrollOffsetY;
+const int highestDegreeBox_Y =( baseY + 4*  gap)- scrollOffsetY;
+const int majorFieldBox_Y =( baseY + 5 * gap)- scrollOffsetY;
 
 
-
-
-
-
-
-//for custom content
-const int  yPersonalInfo7 = (baseY)- scrollOffsetY;
-const int ySocialMedia7= ( baseY + gap)- scrollOffsetY;
-
-const int yContactInfo7= ( baseY + 2 * gap)- scrollOffsetY;
-
-const int yEducationInfo7= ( baseY + 3* gap)- scrollOffsetY;
-
-const int yHealthWellness7= ( baseY + 4* gap)- scrollOffsetY;
-
-const int yCognitiveReports7= ( baseY + 5 * gap)- scrollOffsetY;
-
-
-
-
-const int  yCustomContent7 = ( baseY +6* gap)- scrollOffsetY;
 const int textContentBox_Y =( baseY +7* gap)- scrollOffsetY;
 const int pdfsBox_Y = (baseY + 8 * gap)- scrollOffsetY;
 const int imagesBox_Y =( baseY + 9* gap)- scrollOffsetY;
@@ -3454,64 +3307,14 @@ const int presentationsBox_Y =( baseY + 13 * gap)- scrollOffsetY;
 const int codeBox_Y = (baseY +13 * gap)- scrollOffsetY;
 const int modelsBox_Y = (baseY + 14 * gap)- scrollOffsetY;
 const int ebooksBox_Y = (baseY + 15 * gap)- scrollOffsetY;
-const int yEmergencyContact7= ( baseY + 16 * gap)- scrollOffsetY;
-
-const int yLegalConsent7= ( baseY + 17 * gap)- scrollOffsetY;
 
 
 
 
-
-
-
-//for emergency contact 
-const int  yPersonalInfo8 = (baseY)- scrollOffsetY;
-const int ySocialMedia8= ( baseY +  gap)- scrollOffsetY;
-
-const int yContactInfo8= ( baseY + 2 * gap)- scrollOffsetY;
-
-const int yEducationInfo8= ( baseY + 3* gap)- scrollOffsetY;
-
-const int yHealthWellness8= ( baseY +4* gap)- scrollOffsetY;
-
-const int yCognitiveReports8= ( baseY + 5* gap)- scrollOffsetY;
-const int yCustomContent8= ( baseY + 6 * gap)- scrollOffsetY;
-
-
-
-
-const int  yEmergencyContact8 = (baseY +7 *gap)- scrollOffsetY;
 const int primaryContactNameBox_Y = (baseY +8* gap)- scrollOffsetY;
 const int relationshipBox_Y = (baseY + 9 * gap)- scrollOffsetY;
 const int emergencyPhoneNumberBox_Y = (baseY + 10* gap)- scrollOffsetY;
 
-const int yLegalConsent8= ( baseY + 11 * gap)- scrollOffsetY;
-
-
-
-
-
-
-
-
-
-//for legal consent
-const int  yPersonalInfo9 = (baseY)- scrollOffsetY;
-const int ySocialMedia9= ( baseY +  gap)- scrollOffsetY;
-
-const int yContactInfo9= ( baseY + 2* gap)- scrollOffsetY;
-
-const int yEducationInfo9= ( baseY + 3* gap)- scrollOffsetY;
-
-const int yHealthWellness9= ( baseY +4 * gap)- scrollOffsetY;
-
-const int yCognitiveReports9= ( baseY +5 * gap)- scrollOffsetY;
-const int yCustomContent9= ( baseY +6 * gap)- scrollOffsetY;
-
-const int yEmergencyContact9= ( baseY + 7 * gap)- scrollOffsetY;
-
-
-const int  yLegalConsent9 = (baseY +8 * gap)- scrollOffsetY;
 const int consentFormsBox_Y = (baseY +9* gap)- scrollOffsetY;
 const int licenseAgreementsBox_Y = (baseY + 10* gap)- scrollOffsetY;
 const int termsOfServiceBox_Y =( baseY + 11 * gap)- scrollOffsetY;
@@ -4539,70 +4342,59 @@ if (x>= UpdateButtonX && x<=  UpdateButtonX + 100 && y >= UpdateButtonY && y <= 
 
         // Debugging: Print the mouse coordinates
         std::cout << "Mouse click at (" << x << ", " << y << ")" << std::endl;
-    // Check for clicks on different headings and toggle the visibility of details accordingly
-     // Check if any detail is already being shown
-    bool anyDetailShown = showPersonalInfoDetails || showSocialMediaDetails || showContactInfoDetails ||
-                          showEducationInfoDetails || showHealthWellnessDetails || showCognitiveReportsDetails ||
-                          showCustomContentDetails || showEmergencyContactDetails || showLegalConsentDetails;
-// bool anyTextShown = showpersonalInfoText || showSocialMediaText || showcontactInfoText ||
-//                         showeducationInfoText || showhealthWellnessText || showcognitiveReportsText ||
-//                         showcustomContentText || showemergencyContactText || showlegalConsentText;
-    
-
-
-//iam not getting it how to solve this problem when its like recording allof the previous clicks of mine and making htose texts active too when i go tot the next one i have no idea why its happening
+   
 
 
     if (isClickOnHeading(x, y, xPersonalInfo, yPersonalInfo - scrollOffsetY, textWidthPersonalInfo, textHeightPersonalInfo)) {
-        if (!showPersonalInfoDetails && !anyDetailShown) {
+        if (!showPersonalInfoDetails) {
             showPersonalInfoDetails = true;
         } else if (showPersonalInfoDetails) {
             showPersonalInfoDetails = false;
         }
     } else if (isClickOnHeading(x, y, xSocialMedia, ySocialMedia - scrollOffsetY, textWidthSocialMedia, textHeightSocialMedia)) {
-        if (!showSocialMediaDetails && !anyDetailShown) {
+        if (!showSocialMediaDetails ) {
             showSocialMediaDetails = true;
         } else if (showSocialMediaDetails) {
             showSocialMediaDetails = false;
         }
     } else if (isClickOnHeading(x, y, xContactInfo, yContactInfo - scrollOffsetY, textWidthContactInfo, textHeightContactInfo)) {
-        if (!showContactInfoDetails && !anyDetailShown) {
+        if (!showContactInfoDetails ) {
             showContactInfoDetails = true;
         } else if (showContactInfoDetails) {
             showContactInfoDetails = false;
         }
     } else if (isClickOnHeading(x, y, xEducationInfo, yEducationInfo - scrollOffsetY, textWidthEducationInfo, textHeightEducationInfo)) {
-        if (!showEducationInfoDetails && !anyDetailShown) {
+        if (!showEducationInfoDetails ) {
             showEducationInfoDetails = true;
         } else if (showEducationInfoDetails) {
             showEducationInfoDetails = false;
         }
     } else if (isClickOnHeading(x, y, xHealthWellness, yHealthWellness - scrollOffsetY, textWidthHealthWellness, textHeightHealthWellness)) {
-        if (!showHealthWellnessDetails && !anyDetailShown) {
+        if (!showHealthWellnessDetails ) {
             showHealthWellnessDetails = true;
         } else if (showHealthWellnessDetails) {
             showHealthWellnessDetails = false;
         }
     } else if (isClickOnHeading(x, y, xCognitiveReports, yCognitiveReports - scrollOffsetY, textWidthCognitiveReports, textHeightCognitiveReports)) {
-        if (!showCognitiveReportsDetails && !anyDetailShown) {
+        if (!showCognitiveReportsDetails ) {
             showCognitiveReportsDetails = true;
         } else if (showCognitiveReportsDetails) {
             showCognitiveReportsDetails = false;
         }
     } else if (isClickOnHeading(x, y, xCustomContent, yCustomContent - scrollOffsetY, textWidthCustomContent, textHeightCustomContent)) {
-        if (!showCustomContentDetails && !anyDetailShown) {
+        if (!showCustomContentDetails ) {
             showCustomContentDetails = true;
         } else if (showCustomContentDetails) {
             showCustomContentDetails = false;
         }
     } else if (isClickOnHeading(x, y, xEmergencyContact, yEmergencyContact - scrollOffsetY, textWidthEmergencyContact, textHeightEmergencyContact)) {
-        if (!showEmergencyContactDetails && !anyDetailShown) {
+        if (!showEmergencyContactDetails ) {
             showEmergencyContactDetails = true;
         } else if (showEmergencyContactDetails) {
             showEmergencyContactDetails = false;
         }
     } else if (isClickOnHeading(x, y, xLegalConsent, yLegalConsent - scrollOffsetY, textWidthLegalConsent, textHeightLegalConsent)) {
-        if (!showLegalConsentDetails && !anyDetailShown) {
+        if (!showLegalConsentDetails ) {
             showLegalConsentDetails = true;
         } else if (showLegalConsentDetails) {
             showLegalConsentDetails = false;
@@ -4918,72 +4710,13 @@ if (showlegalConsentText){
  renderTextUnderlined(legalConsentText, xLegalConsent, yLegalConsent- scrollOffsetY, white, NimbusRomFont, renderer);}
 
     
-/////////////////////////////////////////////////
-if (showsocialMediaText2){
-// Social Media Profiles
- renderTextUnderlined(socialMediaText, xSocialMedia, ySocialMedia2- scrollOffsetY, white, NimbusRomFont, renderer);}
- 
-if (showcontactInfoText3){
-// Contact Information
- renderTextUnderlined(contactInfoText, xContactInfo, yContactInfo3- scrollOffsetY, white, NimbusRomFont, renderer);}
-if (showeducationInfoText4){
-// Education Information
- renderTextUnderlined(educationInfoText, xEducationInfo, yEducationInfo4- scrollOffsetY, white, NimbusRomFont, renderer);}
-if (showhealthWellnessText5){
-// Health and Wellness
- renderTextUnderlined(healthWellnessText, xHealthWellness, yHealthWellness5- scrollOffsetY, white, NimbusRomFont, renderer);}
-if (showcognitiveReportsText6){
-// Cognitive Reports
- renderTextUnderlined(cognitiveReportsText, xCognitiveReports, yCognitiveReports6- scrollOffsetY, white, NimbusRomFont, renderer);}
-if (showcustomContentText7){
-// Custom Content
- renderTextUnderlined(customContentText, xCustomContent, yCustomContent7- scrollOffsetY, white, NimbusRomFont, renderer);}
-if (showemergencyContactText8){
-// Emergency Contact Information
- renderTextUnderlined(emergencyContactText, xEmergencyContact, yEmergencyContact8- scrollOffsetY, white, NimbusRomFont, renderer);}
-if (showlegalConsentText9){
-// Legal and Consent
- renderTextUnderlined(legalConsentText, xLegalConsent, yLegalConsent9- scrollOffsetY, white, NimbusRomFont, renderer);}
-
-    
-
 
 
 
 
 
     if (showPersonalInfoDetails) {
-        showpersonalInfoText= true;
-       
-
-
-// Social Media Profiles
- renderText(socialMediaText, xSocialMedia, ySocialMedia1- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Contact Information
- renderText(contactInfoText, xContactInfo, yContactInfo1- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Education Information
- renderText(educationInfoText, xEducationInfo, yEducationInfo1- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Health and Wellness
- renderText(healthWellnessText, xHealthWellness, yHealthWellness1- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Cognitive Reports
- renderText(cognitiveReportsText, xCognitiveReports, yCognitiveReports1- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Custom Content
- renderText(customContentText, xCustomContent, yCustomContent1- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Emergency Contact Information
- renderText(emergencyContactText, xEmergencyContact, yEmergencyContact1- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Legal and Consent
- renderText(legalConsentText, xLegalConsent, yLegalConsent1- scrollOffsetY, white, NimbusRomFont, renderer);
-
-    
-
-
+      
 
 
 
@@ -5105,32 +4838,6 @@ if (enteringHobbies && !hobbies.empty()) {
 
   
  
-showsocialMediaText2= true;  
-
-
-renderText(personalInfoText, xPersonalInfo, yPersonalInfo2 - scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Contact Information
- renderText(contactInfoText, xContactInfo, yContactInfo2- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Education Information
- renderText(educationInfoText, xEducationInfo, yEducationInfo2- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Health and Wellness
- renderText(healthWellnessText, xHealthWellness, yHealthWellness2- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Cognitive Reports
- renderText(cognitiveReportsText, xCognitiveReports, yCognitiveReports2- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Custom Content
- renderText(customContentText, xCustomContent, yCustomContent2- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Emergency Contact Information
- renderText(emergencyContactText, xEmergencyContact, yEmergencyContact2- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Legal and Consent
- renderText(legalConsentText, xLegalConsent, yLegalConsent2- scrollOffsetY, white, NimbusRomFont, renderer);
-
 
 renderText("LinkedIn", xLinkedin, yLinkedin- scrollOffsetY, white, NunitoFont, renderer);
 renderText("Twitter", xTwitter, yTwitter- scrollOffsetY, white, NunitoFont, renderer);
@@ -5191,32 +4898,6 @@ if (enteringInstagram && !instagram.empty()) {
 
 
 
-showcontactInfoText3= true;
-
-renderText(personalInfoText, xPersonalInfo, yPersonalInfo3 - scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Social Media Profiles
- renderText(socialMediaText, xSocialMedia, ySocialMedia3- scrollOffsetY, white, NimbusRomFont, renderer);
-
-
-// Education Information
- renderText(educationInfoText, xEducationInfo, yEducationInfo3- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Health and Wellness
- renderText(healthWellnessText, xHealthWellness, yHealthWellness3- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Cognitive Reports
- renderText(cognitiveReportsText, xCognitiveReports, yCognitiveReports3- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Custom Content
- renderText(customContentText, xCustomContent, yCustomContent3- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Emergency Contact Information
- renderText(emergencyContactText, xEmergencyContact, yEmergencyContact3- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Legal and Consent
- renderText(legalConsentText, xLegalConsent, yLegalConsent3- scrollOffsetY, white, NimbusRomFont, renderer);
-
 renderText("Email", xEmail, yEmail- scrollOffsetY, white, NunitoFont, renderer);
 renderText("Phone Number", xPhoneNumber, yPhoneNumber- scrollOffsetY, white, NunitoFont, renderer);
 
@@ -5252,32 +4933,6 @@ if (enteringPhoneNumber && !phone_number.empty()) {
     if (showEducationInfoDetails) {
     
 
-
- showeducationInfoText4= true;  
-
-renderText(personalInfoText, xPersonalInfo, yPersonalInfo4 - scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Social Media Profiles
- renderText(socialMediaText, xSocialMedia, ySocialMedia4- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Contact Information
- renderText(contactInfoText, xContactInfo, yContactInfo4- scrollOffsetY, white, NimbusRomFont, renderer);
-
-
-// Health and Wellness
- renderText(healthWellnessText, xHealthWellness, yHealthWellness4- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Cognitive Reports
- renderText(cognitiveReportsText, xCognitiveReports, yCognitiveReports4- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Custom Content
- renderText(customContentText, xCustomContent, yCustomContent4- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Emergency Contact Information
- renderText(emergencyContactText, xEmergencyContact, yEmergencyContact4- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Legal and Consent
- renderText(legalConsentText, xLegalConsent, yLegalConsent4- scrollOffsetY, white, NimbusRomFont, renderer);
 renderText("Highest Degree Earned" , xHighestDegree, yHighestDegree- scrollOffsetY, white, NunitoFont, renderer);
 renderText("Major Field of Study", xMajorField, yMajorField- scrollOffsetY, white, NunitoFont, renderer);
 
@@ -5326,34 +4981,6 @@ if (enteringMajorField && !major_field.empty()) {
     if (showHealthWellnessDetails) {
  
         
-
- showhealthWellnessText5= true;
-renderText(personalInfoText, xPersonalInfo, yPersonalInfo5 - scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Social Media Profiles
- renderText(socialMediaText, xSocialMedia, ySocialMedia5- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Contact Information
- renderText(contactInfoText, xContactInfo, yContactInfo5- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Education Information
- renderText(educationInfoText, xEducationInfo, yEducationInfo5- scrollOffsetY, white, NimbusRomFont, renderer);
-
-
-// Cognitive Reports
- renderText(cognitiveReportsText, xCognitiveReports, yCognitiveReports5- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Custom Content
- renderText(customContentText, xCustomContent, yCustomContent5- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Emergency Contact Information
- renderText(emergencyContactText, xEmergencyContact, yEmergencyContact5- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Legal and Consent
- renderText(legalConsentText, xLegalConsent, yLegalConsent5- scrollOffsetY, white, NimbusRomFont, renderer);
-
-
-
 renderText("Health Conditions", xHealthConditions, yHealthConditions- scrollOffsetY, white, NunitoFont, renderer);
 renderText("Fitness Routine", xFitnessRoutine, yFitnessRoutine- scrollOffsetY, white, NunitoFont, renderer);
 renderText("Major Illnesses", xMajorIllnesses, yMajorIllnesses- scrollOffsetY, white, NunitoFont, renderer);
@@ -5429,32 +5056,6 @@ if (enteringSleepPatterns && !sleep_patterns.empty()) {
     if (showCognitiveReportsDetails) {
 
         
-renderText(personalInfoText, xPersonalInfo, yPersonalInfo6 - scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Social Media Profiles
- renderText(socialMediaText, xSocialMedia, ySocialMedia6- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Contact Information
- renderText(contactInfoText, xContactInfo, yContactInfo6- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Education Information
- renderText(educationInfoText, xEducationInfo, yEducationInfo6- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Health and Wellness
- renderText(healthWellnessText, xHealthWellness, yHealthWellness6- scrollOffsetY, white, NimbusRomFont, renderer);
-
-
-// Custom Content
- renderText(customContentText, xCustomContent, yCustomContent6- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Emergency Contact Information
- renderText(emergencyContactText, xEmergencyContact, yEmergencyContact6- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Legal and Consent
- renderText(legalConsentText, xLegalConsent, yLegalConsent6- scrollOffsetY, white, NimbusRomFont, renderer);
-    // showcognitiveReportsText6= true;    
-
-showcognitiveReportsText6=true;
 renderText("Neuropsychological Evaluation", xNeuropsychologicalAssessments, yNeuropsychologicalAssessments- scrollOffsetY, white, NunitoFont, renderer);
 renderText("Electroencephalography", xEeg, yEeg- scrollOffsetY, white, NunitoFont, renderer);
 renderText("Quantitative Electroencephalography", xQeeg, yQeeg- scrollOffsetY, white, NunitoFont, renderer);
@@ -5478,33 +5079,7 @@ renderRoundedRect(renderer, csfAnalysisBox_X, csfAnalysisBox_Y- scrollOffsetY, u
 }
 
     if (showCustomContentDetails) {
-        
-renderText(personalInfoText, xPersonalInfo, yPersonalInfo7 - scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Social Media Profiles
- renderText(socialMediaText, xSocialMedia, ySocialMedia7- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Contact Information
- renderText(contactInfoText, xContactInfo, yContactInfo7- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Education Information
- renderText(educationInfoText, xEducationInfo, yEducationInfo7- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Health and Wellness
- renderText(healthWellnessText, xHealthWellness, yHealthWellness7- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Cognitive Reports
- renderText(cognitiveReportsText, xCognitiveReports, yCognitiveReports7- scrollOffsetY, white, NimbusRomFont, renderer);
-
-
-// Emergency Contact Information
- renderText(emergencyContactText, xEmergencyContact, yEmergencyContact7- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Legal and Consent
- renderText(legalConsentText, xLegalConsent, yLegalConsent7- scrollOffsetY, white, NimbusRomFont, renderer);
-    // showcustomContentText7=true;    
-
-showcustomContentText7=true;
+   
 renderText("Text", xTextContent, yTextContent- scrollOffsetY, white, NunitoFont, renderer);
 renderText("PDFs", xPdfs, yPdfs- scrollOffsetY, white, NunitoFont, renderer);
 renderText("Images", xImages, yImages- scrollOffsetY, white, NunitoFont, renderer);
@@ -5529,33 +5104,7 @@ renderRoundedRect(renderer, ebooksBox_X, ebooksBox_Y- scrollOffsetY, uploadboxwi
  }
 
     if (showEmergencyContactDetails) {
-        
-renderText(personalInfoText, xPersonalInfo, yPersonalInfo8 - scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Social Media Profiles
- renderText(socialMediaText, xSocialMedia, ySocialMedia8- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Contact Information
- renderText(contactInfoText, xContactInfo, yContactInfo8- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Education Information
- renderText(educationInfoText, xEducationInfo, yEducationInfo8- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Health and Wellness
- renderText(healthWellnessText, xHealthWellness, yHealthWellness8- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Cognitive Reports
- renderText(cognitiveReportsText, xCognitiveReports, yCognitiveReports8- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Custom Content
- renderText(customContentText, xCustomContent, yCustomContent8- scrollOffsetY, white, NimbusRomFont, renderer);
-
-
-// Legal and Consent
- renderText(legalConsentText, xLegalConsent, yLegalConsent8- scrollOffsetY, white, NimbusRomFont, renderer);
-        // showemergencyContactText8= true;
-
-showemergencyContactText8=true;
+ 
 renderText("Primary Contact Name", xPrimaryContactName, yPrimaryContactName- scrollOffsetY, white, NunitoFont, renderer);
 renderText( "Relationship", xRelationship, yRelationship- scrollOffsetY, white, NunitoFont, renderer);
 renderText("Phone Number", xEmergencyPhoneNumber, yEmergencyPhoneNumber- scrollOffsetY, white, NunitoFont, renderer);
@@ -5603,33 +5152,7 @@ if (enteringEmergencyPhoneNumber && !emergency_phone_number.empty()) {
 
 
     if (showLegalConsentDetails) {
-        
-renderText(personalInfoText, xPersonalInfo, yPersonalInfo9 - scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Social Media Profiles
- renderText(socialMediaText, xSocialMedia, ySocialMedia9- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Contact Information
- renderText(contactInfoText, xContactInfo, yContactInfo9- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Education Information
- renderText(educationInfoText, xEducationInfo, yEducationInfo9- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Health and Wellness
- renderText(healthWellnessText, xHealthWellness, yHealthWellness9- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Cognitive Reports
- renderText(cognitiveReportsText, xCognitiveReports, yCognitiveReports9- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Custom Content
- renderText(customContentText, xCustomContent, yCustomContent9- scrollOffsetY, white, NimbusRomFont, renderer);
-
-// Emergency Contact Information
- renderText(emergencyContactText, xEmergencyContact, yEmergencyContact9- scrollOffsetY, white, NimbusRomFont, renderer);
-
-        // showlegalConsentText9= true;
-      
-showlegalConsentText9=true;
+   
 
         renderTextUnderlined("Consent Forms", xConsentForms, yConsentForms - scrollOffsetY, skyblue, NunitoFont, renderer);
         renderTextUnderlined("License Agreements", xLicenseAgreements, yLicenseAgreements - scrollOffsetY, skyblue, NunitoFont, renderer);
@@ -5961,7 +5484,7 @@ public:
         return false;
     }
 
-   void handleDropdownClick(const std::vector<std::string>& options, int& selectedOption, int x, int y, int mouseX, int mouseY, bool& isDropdownOpen) {
+  void handleDropdownClick(const std::vector<std::string>& options, int& selectedOption, int x, int y, int mouseX, int mouseY, bool& isDropdownOpen) {
     SDL_Rect dropdownRect = { x, y - scrollOffsetY, 200, 40 };
 
     if (mouseX >= dropdownRect.x && mouseY >= dropdownRect.y &&
@@ -5988,30 +5511,33 @@ public:
 
 
 
+void render() override {
+    NavigationMenu::render();
+    const char *settingsText = "Settings";
+    TTF_SizeText(NunitoFont, settingsText, &textWidthsettings, &textHeightsettings);
+    renderText(settingsText, (Width - textWidthsettings) / 2, 30 - scrollOffsetY, white, NunitoFont, renderer);
 
+    // Render checkboxes and text
+    renderSettingsOption("Push Notifications", pushNotifications, 100);
+    renderSettingsOption("Email Notifications", emailNotifications, 150);
+    renderSettingsOption("SMS Notifications", smsNotifications, 200);
+    renderSettingsOption("In-App Notifications", inAppNotifications, 250);
 
-
-
-    void render() override {
-        NavigationMenu::render();
-        const char *settingsText = "Settings";
-        TTF_SizeText(NimbusRomFont, settingsText, &textWidthsettings, &textHeightsettings);
-        renderText(settingsText, (Width - textWidthsettings) / 2, 30- scrollOffsetY, white,NimbusRomFont, renderer);
-        // Render checkboxes and text
-        renderSettingsOption("Push Notifications", pushNotifications, 100);
-        renderSettingsOption("Email Notifications", emailNotifications, 150);
-        renderSettingsOption("SMS Notifications", smsNotifications, 200);
-        renderSettingsOption("In-App Notifications", inAppNotifications, 250);
-
-        // Render appearance settings
-        renderText("Theme", labelX, 300- scrollOffsetY, white,NunitoFont, renderer );
+    // Render appearance settings
+    renderText("Theme", labelX, 300 - scrollOffsetY, white, NunitoFont, renderer);
     renderDropdown({"Light", "Dark", "Custom"}, theme, checkboxX, 300, renderer, NunitoFont, white, isThemeDropdownOpen);
-        renderText("Font Size", labelX, 350- scrollOffsetY, white,NunitoFont, renderer );
-        renderSlider(sliderValue, checkboxX, 350);
 
-        renderText("Language", labelX, 400- scrollOffsetY, white,NunitoFont, renderer );
- renderDropdown({"English", "Spanish", "French", "German", "Chinese"}, language, checkboxX, 400, renderer, NunitoFont, white, isLanguageDropdownOpen);
-    }
+    // Adjust positions based on dropdown state
+    int fontSizeY = isThemeDropdownOpen ? 350 + (40 * 3) : 350;  // Shift down by height of dropdown items
+    int languageY = isThemeDropdownOpen ? 400 + (40 * 3) : 400;  // Shift down by height of dropdown items
+
+    renderText("Font Size", labelX, fontSizeY - scrollOffsetY, white, NunitoFont, renderer);
+    renderSlider(sliderValue, checkboxX, fontSizeY);
+
+    renderText("Language", labelX, languageY - scrollOffsetY, white, NunitoFont, renderer);
+    renderDropdown({"English", "Spanish", "French", "German", "Chinese"}, language, checkboxX, languageY, renderer, NunitoFont, white, isLanguageDropdownOpen);
+}
+
 
 
     void renderCheckbox(bool checked, int x, int y) {
