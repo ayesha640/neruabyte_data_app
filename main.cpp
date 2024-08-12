@@ -137,6 +137,7 @@ const int offset=20;
  SDL_Window *window = nullptr;
  SDL_Renderer *renderer = nullptr;
  TTF_Font *NunitoFont = nullptr;
+ TTF_Font *smallNunitoFont = nullptr;
  TTF_Font *NimbusRomFont= nullptr;
  std::unique_ptr<User> currentUser = nullptr;
  AppState currentState = SPLASH_SCREEN;
@@ -5878,10 +5879,6 @@ void renderProfileDetails(bool isUpdated = false) {
 }
 
 
-
-
-
-
 };
 
 ///////////////////////////////////////////////////////////////////
@@ -5895,6 +5892,7 @@ private:
     bool smsNotifications = false;
     bool inAppNotifications = false;
     int theme = 0; // 0 for Light, 1 for Dark, 2 for Custom
+    int sliderValue = 10;
     int fontSize = 16; // Slider range: 10 to 30
     int language = 0; // 0 for English, 1 for Spanish, etc.
 
@@ -5904,7 +5902,8 @@ private:
     const int checkboxSize = 20;
     const int textOffsetY = 30;
     const int checkboxOffsetY = 50;
-
+  bool isThemeDropdownOpen = false;
+    bool isLanguageDropdownOpen = false;
 public:
     SettingsScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* NunitoFont)
         : NavigationMenu(window, renderer, NunitoFont) {
@@ -5933,15 +5932,65 @@ public:
             }
 
             // Handle dropdown clicks
-            handleDropdownClick({"Light", "Dark", "Custom"}, theme, checkboxX, 300, x, y);
-            handleDropdownClick({"English", "Spanish", "French", "German", "Chinese"}, language, checkboxX, 400, x, y);
+        handleDropdownClick({"Light", "Dark", "Custom"}, theme, checkboxX, 300, x, y, isThemeDropdownOpen);
+           handleDropdownClick({"English", "Spanish", "French", "German", "Chinese"}, language, checkboxX, 400, x, y, isLanguageDropdownOpen);
         }
 
         if (event.type == SDL_MOUSEMOTION && (event.motion.state & SDL_BUTTON_LMASK)) {
             // Handle slider drag
-            handleSliderDrag(fontSize, checkboxX, 350- scrollOffsetY, event.motion.x);
+            handleSliderDrag(sliderValue, checkboxX, 350- scrollOffsetY, event.motion.x);
         }
     }
+    
+
+    void handleSliderDrag(int& value, int x, int y, int mouseX) {
+        SDL_Rect sliderRect = { x, y- scrollOffsetY, 200, 20 };
+        if (mouseX >= sliderRect.x && mouseX <= (sliderRect.x + sliderRect.w)) {
+            value = (mouseX - sliderRect.x) / 10 + 10;  // Assuming value range is 10 to 30
+        }
+    }
+
+    
+ bool handleCheckboxClick(bool& checkbox, int x, int y, int mouseX, int mouseY) {
+        SDL_Rect checkboxRect = { x, y- scrollOffsetY, checkboxSize, checkboxSize };
+        if (mouseX >= checkboxRect.x && mouseY >= checkboxRect.y &&
+            mouseX <= (checkboxRect.x + checkboxRect.w) &&
+            mouseY <= (checkboxRect.y + checkboxRect.h)) {
+            return true;
+        }
+        return false;
+    }
+
+   void handleDropdownClick(const std::vector<std::string>& options, int& selectedOption, int x, int y, int mouseX, int mouseY, bool& isDropdownOpen) {
+    SDL_Rect dropdownRect = { x, y - scrollOffsetY, 200, 40 };
+
+    if (mouseX >= dropdownRect.x && mouseY >= dropdownRect.y &&
+        mouseX <= (dropdownRect.x + dropdownRect.w) &&
+        mouseY <= (dropdownRect.y + dropdownRect.h)) {
+        isDropdownOpen = !isDropdownOpen;
+    }
+
+    if (isDropdownOpen) {
+        for (size_t i = 0; i < options.size(); ++i) {
+            int optionY = y + 40 + static_cast<int>(i * 40) - scrollOffsetY;
+            SDL_Rect optionRect = { x, optionY, 200, 40 };
+
+            if (mouseX >= optionRect.x && mouseY >= optionRect.y &&
+                mouseX <= (optionRect.x + optionRect.w) &&
+                mouseY <= (optionRect.y + optionRect.h)) {
+                selectedOption = static_cast<int>(i);
+                isDropdownOpen = false;
+                break;
+            }
+        }
+    }
+}
+
+
+
+
+
+
 
     void render() override {
         NavigationMenu::render();
@@ -5956,13 +6005,12 @@ public:
 
         // Render appearance settings
         renderText("Theme", labelX, 300- scrollOffsetY, white,NunitoFont, renderer );
-        renderDropdown({"Light", "Dark", "Custom"}, theme, checkboxX, 300);
-
+    renderDropdown({"Light", "Dark", "Custom"}, theme, checkboxX, 300, renderer, NunitoFont, white, isThemeDropdownOpen);
         renderText("Font Size", labelX, 350- scrollOffsetY, white,NunitoFont, renderer );
-        renderSlider(fontSize, checkboxX, 350);
+        renderSlider(sliderValue, checkboxX, 350);
 
         renderText("Language", labelX, 400- scrollOffsetY, white,NunitoFont, renderer );
-        renderDropdown({"English", "Spanish", "French", "German", "Chinese"}, language, checkboxX, 400);
+ renderDropdown({"English", "Spanish", "French", "German", "Chinese"}, language, checkboxX, 400, renderer, NunitoFont, white, isLanguageDropdownOpen);
     }
 
 
@@ -5984,31 +6032,7 @@ public:
         renderCheckbox(checked, checkboxX, y);
     }
 
-    bool handleCheckboxClick(bool& checkbox, int x, int y, int mouseX, int mouseY) {
-        SDL_Rect checkboxRect = { x, y- scrollOffsetY, checkboxSize, checkboxSize };
-        if (mouseX >= checkboxRect.x && mouseY >= checkboxRect.y &&
-            mouseX <= (checkboxRect.x + checkboxRect.w) &&
-            mouseY <= (checkboxRect.y + checkboxRect.h)) {
-            return true;
-        }
-        return false;
-    }
-
-    void handleSliderDrag(int& value, int x, int y, int mouseX) {
-        SDL_Rect sliderRect = { x, y- scrollOffsetY, 200, 20 };
-        if (mouseX >= sliderRect.x && mouseX <= (sliderRect.x + sliderRect.w)) {
-            value = (mouseX - sliderRect.x) / 10 + 10;  // Assuming value range is 10 to 30
-        }
-    }
-
-    void handleDropdownClick(const std::vector<std::string>& options, int& selectedOption, int x, int y, int mouseX, int mouseY) {
-        SDL_Rect dropdownRect = { x, y- scrollOffsetY, 200, 40 };
-        if (mouseX >= dropdownRect.x && mouseY >= dropdownRect.y &&
-            mouseX <= (dropdownRect.x + dropdownRect.w) &&
-            mouseY <= (dropdownRect.y + dropdownRect.h)) {
-            selectedOption = (selectedOption + 1) % options.size();  // Cycle through options
-        }
-    }
+   
 
     void renderSlider(int value, int x, int y) {
         SDL_Rect sliderRect = { x, y- scrollOffsetY, 200, 20 };
@@ -6020,14 +6044,34 @@ public:
         SDL_Rect sliderKnob = { knobX, y - 5- scrollOffsetY, 10, 30 };
         SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
         SDL_RenderFillRect(renderer, &sliderKnob);
+ std::string valueStr = std::to_string(value);
+        // Render the font size text below the slider
+    int textX = knobX - 5; // Center the text below the knob
+    int textY = y + 25 - scrollOffsetY; // Position below the slider bar
+      smallNunitoFont = TTF_OpenFont("C:/NEW/assets/Nunito-Regular.ttf", 10);
+    renderText(valueStr, textX, textY, white, smallNunitoFont, renderer);
     }
+void renderDropdown(const std::vector<std::string>& options, int selectedOption, int x, int y, SDL_Renderer* renderer, TTF_Font* font, SDL_Color textColor, bool isDropdownOpen) {
+    SDL_Rect dropdownRect = { x, y - scrollOffsetY, 200, 40 };
+    SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
+    SDL_RenderFillRect(renderer, &dropdownRect);
+    renderText(options[selectedOption].c_str(), x + 10, y + 10 - scrollOffsetY, textColor, font, renderer);
 
-    void renderDropdown(const std::vector<std::string>& options, int selectedOption, int x, int y) {
-        SDL_Rect dropdownRect = { x, y- scrollOffsetY, 200, 40 };
-        SDL_SetRenderDrawColor(renderer, 150, 150, 150, 255);
-        SDL_RenderFillRect(renderer, &dropdownRect);
-        renderText(options[selectedOption], x + 10, (y + 10)- scrollOffsetY, white, NunitoFont,renderer);
+    if (isDropdownOpen) {
+        // Explicitly cast the height to int to prevent narrowing conversion warning
+        SDL_Rect dropdownMenuRect = { x, y + 40 - scrollOffsetY, 200, static_cast<int>(40 * options.size()) };
+        SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
+        SDL_RenderFillRect(renderer, &dropdownMenuRect);
+
+        for (size_t i = 0; i < options.size(); ++i) {
+            SDL_Rect optionRect = { x, y + 40 + static_cast<int>(i * 40) - scrollOffsetY, 200, 40 };
+            SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255);
+            SDL_RenderFillRect(renderer, &optionRect);
+            renderText(options[i].c_str(), x + 10, y + 50 + static_cast<int>(i * 40) - scrollOffsetY, textColor, font, renderer);
+        }
     }
+}
+
 };
 
 
