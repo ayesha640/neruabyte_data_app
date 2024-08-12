@@ -5863,7 +5863,7 @@ void renderProfileDetails(bool isUpdated = false) {
     renderSectionText("Health Conditions:", isUpdated ? profileUpdateScreen.health_conditions : "[Your Health Conditions]", currentY + 20 - scrollOffsetY);
     renderSectionText("Fitness Routine:", isUpdated ? profileUpdateScreen.fitness_routine : "[Your Fitness Routine]", currentY + 50 - scrollOffsetY);
     renderSectionText("Major Illnesses:", isUpdated ? profileUpdateScreen.major_illnesses : "[Your Major Illnesses]", currentY + 80 - scrollOffsetY);
-    renderSectionText("Mental Health Status:", isUpdated ? profileUpdateScreen.mental_health_status : "[Your Mental Health Status]", currentY + 110 - scrollOffsetY);
+    renderSectionText("Mental Status:", isUpdated ? profileUpdateScreen.mental_health_status : "[Your Mental Health Status]", currentY + 110 - scrollOffsetY);
     renderSectionText("Sleep Patterns:", isUpdated ? profileUpdateScreen.sleep_patterns : "[Your Sleep Patterns]", currentY + 140 - scrollOffsetY);
     currentY += healthInfoHeight + sectionSpacing;
 
@@ -5884,45 +5884,156 @@ void renderProfileDetails(bool isUpdated = false) {
 
 };
 
-////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-//i think so settings screen should be a base class and all other screens should be dereived from it 
+///////////////////////////////////////////////////////////////////
 class SettingsScreenState : public NavigationMenu {
 private:
     SDL_Color white = { 255, 255, 255, 255 };
     SDL_Color grey = { 100, 100, 100, 255 };
-    SDL_Color black = { 0, 0, 0, 255 };
-    SDL_Color darkgreen = { 0, 50, 0, 255 };
-    SDL_Color maroon = { 128, 0, 0, 255 };
+    int textWidthsettings, textHeightsettings;
+    bool pushNotifications = false;
+    bool emailNotifications = false;
+    bool smsNotifications = false;
+    bool inAppNotifications = false;
+    int theme = 0; // 0 for Light, 1 for Dark, 2 for Custom
+    int fontSize = 16; // Slider range: 10 to 30
+    int language = 0; // 0 for English, 1 for Spanish, etc.
+
+    // Add padding or spacing constants if needed
+    const int labelX = 100;
+    const int checkboxX = 420;
+    const int checkboxSize = 20;
+    const int textOffsetY = 30;
+    const int checkboxOffsetY = 50;
 
 public:
     SettingsScreenState(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* NunitoFont)
         : NavigationMenu(window, renderer, NunitoFont) {
         SDL_StartTextInput();
-        // Initialize other necessary variables if needed
     }
 
     void handleEvents(SDL_Event& event) override {
-         NavigationMenu::handleEvents(event);
-    }
+        NavigationMenu::handleEvents(event);
 
-    void update() override {
-        NavigationMenu:: update();
+        int x = event.button.x;
+        int y = event.button.y;
+
+        if (event.type == SDL_MOUSEBUTTONDOWN) {
+            // Handle checkbox clicks
+            if (handleCheckboxClick(pushNotifications, checkboxX, 100, x, y)) {
+                pushNotifications = !pushNotifications;
+            }
+            if (handleCheckboxClick(emailNotifications, checkboxX, 150, x, y)) {
+                emailNotifications = !emailNotifications;
+            }
+            if (handleCheckboxClick(smsNotifications, checkboxX, 200, x, y)) {
+                smsNotifications = !smsNotifications;
+            }
+            if (handleCheckboxClick(inAppNotifications, checkboxX, 250, x, y)) {
+                inAppNotifications = !inAppNotifications;
+            }
+
+            // Handle dropdown clicks
+            handleDropdownClick({"Light", "Dark", "Custom"}, theme, checkboxX, 300, x, y);
+            handleDropdownClick({"English", "Spanish", "French", "German", "Chinese"}, language, checkboxX, 400, x, y);
+        }
+
+        if (event.type == SDL_MOUSEMOTION && (event.motion.state & SDL_BUTTON_LMASK)) {
+            // Handle slider drag
+            handleSliderDrag(fontSize, checkboxX, 350- scrollOffsetY, event.motion.x);
+        }
     }
 
     void render() override {
-         NavigationMenu::render();
+        NavigationMenu::render();
+        const char *settingsText = "Settings";
+        TTF_SizeText(NimbusRomFont, settingsText, &textWidthsettings, &textHeightsettings);
+        renderText(settingsText, (Width - textWidthsettings) / 2, 30- scrollOffsetY, white,NimbusRomFont, renderer);
+        // Render checkboxes and text
+        renderSettingsOption("Push Notifications", pushNotifications, 100);
+        renderSettingsOption("Email Notifications", emailNotifications, 150);
+        renderSettingsOption("SMS Notifications", smsNotifications, 200);
+        renderSettingsOption("In-App Notifications", inAppNotifications, 250);
+
+        // Render appearance settings
+        renderText("Theme", labelX, 300- scrollOffsetY, white,NunitoFont, renderer );
+        renderDropdown({"Light", "Dark", "Custom"}, theme, checkboxX, 300);
+
+        renderText("Font Size", labelX, 350- scrollOffsetY, white,NunitoFont, renderer );
+        renderSlider(fontSize, checkboxX, 350);
+
+        renderText("Language", labelX, 400- scrollOffsetY, white,NunitoFont, renderer );
+        renderDropdown({"English", "Spanish", "French", "German", "Chinese"}, language, checkboxX, 400);
     }
 
-    void cleanup() override {
-        NavigationMenu::cleanup();
+
+    void renderCheckbox(bool checked, int x, int y) {
+        SDL_Rect checkboxRect = { x, y- scrollOffsetY, checkboxSize, checkboxSize };
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderDrawRect(renderer, &checkboxRect);
+
+        if (checked) {
+            // Draw tick mark
+            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // Green color for the tick mark
+            SDL_RenderDrawLine(renderer, x + 4, (y + 10)- scrollOffsetY, x + 8, (y + 14)- scrollOffsetY); // Left diagonal of the tick
+            SDL_RenderDrawLine(renderer, x + 8, (y + 14)- scrollOffsetY, x + 16, (y + 6)- scrollOffsetY);  // Right diagonal of the tick
+        }
+    }
+
+    void renderSettingsOption(const std::string& label, bool checked, int y) {
+        renderText(label, labelX, y- scrollOffsetY, white,NunitoFont,renderer);
+        renderCheckbox(checked, checkboxX, y);
+    }
+
+    bool handleCheckboxClick(bool& checkbox, int x, int y, int mouseX, int mouseY) {
+        SDL_Rect checkboxRect = { x, y- scrollOffsetY, checkboxSize, checkboxSize };
+        if (mouseX >= checkboxRect.x && mouseY >= checkboxRect.y &&
+            mouseX <= (checkboxRect.x + checkboxRect.w) &&
+            mouseY <= (checkboxRect.y + checkboxRect.h)) {
+            return true;
+        }
+        return false;
+    }
+
+    void handleSliderDrag(int& value, int x, int y, int mouseX) {
+        SDL_Rect sliderRect = { x, y- scrollOffsetY, 200, 20 };
+        if (mouseX >= sliderRect.x && mouseX <= (sliderRect.x + sliderRect.w)) {
+            value = (mouseX - sliderRect.x) / 10 + 10;  // Assuming value range is 10 to 30
+        }
+    }
+
+    void handleDropdownClick(const std::vector<std::string>& options, int& selectedOption, int x, int y, int mouseX, int mouseY) {
+        SDL_Rect dropdownRect = { x, y- scrollOffsetY, 200, 40 };
+        if (mouseX >= dropdownRect.x && mouseY >= dropdownRect.y &&
+            mouseX <= (dropdownRect.x + dropdownRect.w) &&
+            mouseY <= (dropdownRect.y + dropdownRect.h)) {
+            selectedOption = (selectedOption + 1) % options.size();  // Cycle through options
+        }
+    }
+
+    void renderSlider(int value, int x, int y) {
+        SDL_Rect sliderRect = { x, y- scrollOffsetY, 200, 20 };
+        SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
+        SDL_RenderFillRect(renderer, &sliderRect);
+
+        // Draw slider knob
+        int knobX = x + (value - 10) * 10; // Assuming value is between 10 and 30
+        SDL_Rect sliderKnob = { knobX, y - 5- scrollOffsetY, 10, 30 };
+        SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+        SDL_RenderFillRect(renderer, &sliderKnob);
+    }
+
+    void renderDropdown(const std::vector<std::string>& options, int selectedOption, int x, int y) {
+        SDL_Rect dropdownRect = { x, y- scrollOffsetY, 200, 40 };
+        SDL_SetRenderDrawColor(renderer, 150, 150, 150, 255);
+        SDL_RenderFillRect(renderer, &dropdownRect);
+        renderText(options[selectedOption], x + 10, (y + 10)- scrollOffsetY, white, NunitoFont,renderer);
     }
 };
+
+
+
+//i think so settings screen should be a base class and all other screens should be dereived from it 
+
 
 class CognitiveStatsScreenState : public NavigationMenu {
 private:
